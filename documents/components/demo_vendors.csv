@@ -1,0 +1,6 @@
+vendor_id,vendor_name,contact_person,phone,whatsapp,location,products_supplied,base_cost,floor_price,lead_time_days,moq,rating,upi_id,bank_account,ifsc
+v_deccan,Deccan Flora Wholesale Nursery,Ramesh Patel,+91XXXXXXXXXX,+91XXXXXXXXXX,Pune Regional Hub,p_snake_plant_10in;p_fiddle_leaf_fig;p_monstera_deliciosa;p_zz_plant_premium,340.00,250.00,1,20,4.8,deccanflora@icici,50200012345678,ICIC0001234
+v_greencanopy,Green Canopy Growers,Anil Rao,+91XXXXXXXXXX,+91XXXXXXXXXX,Kadiam Botanical Cluster,p_snake_plant_10in;p_fiddle_leaf_fig,320.00,260.00,2,30,4.6,greencanopy@upi,919812345678,PYTM0123456
+v_biogreens,BioGreens Botanical Nursery,Suresh Gowda,+91XXXXXXXXXX,+91XXXXXXXXXX,Bengaluru Agro Corridor,p_snake_plant_10in;p_monstera_deliciosa,310.00,255.00,4,50,4.2,biogreens@sbi,30891234567,SBIN0004567
+v_ceramics_craft,Heritage Ceramic Crafts,Rajesh Varma,+91XXXXXXXXXX,+91XXXXXXXXXX,Khurja Pottery Hub,p_ceramic_pot_10in,145.00,120.00,2,20,4.7,heritagecrafts@hdfcbank,50100234567890,HDFC0000456
+v_bio_agro,BioAgro Organics India,Dr. K. Sharma,+91XXXXXXXXXX,+91XXXXXXXXXX,Nashik Bio Hub,p_organic_neem_oil,115.00,95.00,2,12,4.6,bioagro@okhdfcbank,1029384756,UTIB0000789

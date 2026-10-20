@@ -1,0 +1,52 @@
+{
+  "activePlaybookId": "playbook-default-master",
+  "books": [
+    {
+      "id": "playbook-default-master",
+      "title": "Master Procurement & Botanical Negotiation Playbook (Chris Voss & Fisher Principles)",
+      "filename": "Master_Procurement_Negotiation_Playbook.md",
+      "uploaded_at": "2026-10-19T04:21:41.345Z",
+      "size_bytes": 3513,
+      "chunk_count": 6,
+      "chunks": [
+        {
+          "id": "chunk_1",
+          "heading": "Master Procurement & Botanical Vendor Negotiation Playbook",
+          "content": "*Authoritative Guidelines for Merlot Home Decor & Nursery Procurement Agents*\n*Based on Principled Negotiation (Fisher & Ury) and Tactical Empathy (Chris Voss)*\n\n---",
+          "preview": "*Authoritative Guidelines for Merlot Home Decor & Nursery Procurement Agents*\n*Based on Principled Negotiation (Fisher & Ury) and Tactical Empathy (Ch..."
+        },
+        {
+          "id": "chunk_2",
+          "heading": "Chapter 1: The Anchoring Principle & Opening Calibration",
+          "content": "- **Core Rule:** Never accept the vendor's first catalog rate as a final truth. Wholesale catalog rates always include an initial 15-25% bargaining cushion.\n- **Tactic:** Anchor against your historical clearing price (the best historical PO rate). Quote the exact previous PO number and rate to anchor the conversation in verifiable precedent rather than arbitrary haggling.\n- **Dialogue Formula:** *\"According to our historical procurement archive, our last PO cleared at ₹[Historical Rate]/unit. Given our recurring monthly volume, can you confirm ₹[Counter Rate] for immediate dispatch?\"*\n\n---",
+          "preview": "- **Core Rule:** Never accept the vendor's first catalog rate as a final truth. Wholesale catalog rates always include an initial 15-25% bargaining cu..."
+        },
+        {
+          "id": "chunk_3",
+          "heading": "Chapter 2: Tactical Empathy & The Peat/Logistics Counter",
+          "content": "- **Core Rule:** When vendors cite rising transport, diesel, coco-peat, or greenhouse fertilizer costs, do not dismiss their pain. Dismissing creates resistance; acknowledging creates collaboration.\n- **Tactic (Mirroring & Labeling):** Acknowledge their logistics constraints, then immediately pivot to offer non-monetary relief: instantaneous UPI payout upon dispatch and zero payment collection friction.\n- **Dialogue Formula:** *\"It seems like transport and peat spikes are squeezing your margins this quarter. We understand completely. That is why Merlot guarantees immediate UPI settlement directly to your account with zero Net-60 delays, saving your treasury team collection costs.\"*\n\n---",
+          "preview": "- **Core Rule:** When vendors cite rising transport, diesel, coco-peat, or greenhouse fertilizer costs, do not dismiss their pain. Dismissing creates ..."
+        },
+        {
+          "id": "chunk_4",
+          "heading": "Chapter 3: The Ackerman Bargaining Model & Incremental Concessions",
+          "content": "- **Core Rule:** Concessions must decrease in size with every turn to psychologically signal to the vendor that they have reached your absolute limit.\n- **Step 1:** Initial counter-offer at 80% of vendor quote or historical rate.\n- **Step 2:** If vendor makes a concession, offer an incremental compromise (65% of the remaining gap).\n- **Step 3:** Final concession at the exact corporate ceiling cost with a non-monetary bonus (e.g., recurring priority order status).\n\n---",
+          "preview": "- **Core Rule:** Concessions must decrease in size with every turn to psychologically signal to the vendor that they have reached your absolute limit...."
+        },
+        {
+          "id": "chunk_5",
+          "heading": "Chapter 4: Calibrated Open-Ended Questions",
+          "content": "- **Core Rule:** Never issue ultimatums or threats. Ask calibrated \"How\" and \"What\" questions that force the vendor to solve your margin problem for you.\n- **Tactic:** Use calibrated questions when the vendor refuses to meet the margin target:\n  - *\"How are we supposed to maintain retail price competitiveness and keep ordering 60+ units every month if the unit cost exceeds ₹[Ceiling]?\"*\n  - *\"What would it take on our side in terms of recurring volume or payment speed to clear this batch at ₹[Target]?\"*\n\n---",
+          "preview": "- **Core Rule:** Never issue ultimatums or threats. Ask calibrated \"How\" and \"What\" questions that force the vendor to solve your margin problem for y..."
+        },
+        {
+          "id": "chunk_6",
+          "heading": "Chapter 5: The Hard Walkaway Discipline",
+          "content": "- **Core Rule:** If the vendor's best concession exceeds the store's Maximum Walkaway Ceiling (Target Gross Margin < 50%), the agent must never violate corporate policy.\n- **Tactic:** State the walkaway ceiling calmly as a non-negotiable policy threshold set by the store owner, not personal malice. Offer the vendor the final chance to take the deal at the ceiling price before switching to alternate suppliers in the directory.\n- **Dialogue Formula:** *\"Our corporate store margin policy strictly caps procurement for this category at ₹[Ceiling]/unit. If you can confirm at ₹[Ceiling], we will release instant UPI payment now; otherwise, we will have to source this batch from our regional backup growers.\"*",
+          "preview": "- **Core Rule:** If the vendor's best concession exceeds the store's Maximum Walkaway Ceiling (Target Gross Margin < 50%), the agent must never violat..."
+        }
+      ],
+      "is_active": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "firm_name": "Merlot Home Decor & Nursery",
+  "owner_name": "Alex Merlot",
+  "phone": "+91 98765 00000",
+  "whatsapp": "+91 98765 00000",
+  "address": "Plot 42, Botanical Boulevard, Nursery Zone, Pune",
+  "city": "Pune",
+  "gstin": "27AAAAA0000A1Z5",
+  "corporate_upi_id": "merlotdecor@icici",
+  "bank_name": "ICICI Bank",
+  "account_number": "50200098765432",
+  "ifsc_code": "ICIC0001234",
+  "auto_approval_limit": 25000.0,
+  "min_gross_margin_pct": 50.0,
+  "max_ceiling_price": 250.0,
+  "registered_at": "2026-10-19T08:35:00.000Z",
+  "qr_code_data": "upi://pay?pa=merlotdecor@icici&pn=Merlot+Home+Decor&cu=INR"
+}
