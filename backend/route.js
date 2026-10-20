@@ -36,6 +36,29 @@ try {
   require('dotenv').config({ path: path.join(__dirname, '.env') });
 } catch (e) {}
 
+/**
+ * 🔒 Agent API Key Authentication Middleware
+ * Enforces key verification on sensitive admin, configuration, and financial endpoints.
+ * Public webhooks (/whatsapp-webhook) and read-only status endpoints remain accessible.
+ */
+function requireAuth(req, res, next) {
+  const configuredKey = (process.env.AGENT_API_KEY || 'merlot_secure_agent_key_2026').trim();
+  const providedKey = (
+    req.headers['x-agent-key'] ||
+    req.query.api_key ||
+    (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null)
+  );
+
+  if (!providedKey || String(providedKey).trim() !== configuredKey) {
+    return res.status(401).json({
+      error: 'Unauthorized: Invalid or missing Agent API Key. Provide a valid key in the X-Agent-Key header or api_key parameter.'
+    });
+  }
+  next();
+}
+
 // Safe multi-folder path resolver (works whether route.js is in /backend, root, or agent.gen)
 function resolveAppPath(...subpaths) {
   const p1 = path.join(__dirname, ...subpaths);
@@ -389,11 +412,20 @@ try {
 class POSBridge {
   constructor() {
     this.apiUrl = process.env.POS_URL || 'http://localhost:5000';
-    this.dbPath = process.env.POS_DB_PATH || path.resolve(__dirname, '../retail-pos-app/backend/localdb.sqlite');
+    this.dbPath = this.resolveDefaultDbPath();
     this.tenantId = process.env.TENANT_ID || 'tenant_merlot_01';
     this.dbInstance = null;
     this.localOrdersDb = null;
     this.initDatabase();
+  }
+
+  resolveDefaultDbPath() {
+    if (process.env.POS_DB_PATH) return path.resolve(process.env.POS_DB_PATH);
+    const candidateLocal = resolveAppPath('localdb.sqlite');
+    if (fs.existsSync(candidateLocal)) return candidateLocal;
+    const candidateMerlot = resolveAppPath('merlot_pos_orders.sqlite');
+    if (fs.existsSync(candidateMerlot)) return candidateMerlot;
+    return path.resolve(__dirname, '../retail-pos-app/backend/localdb.sqlite');
   }
 
   setPosAddress(config = {}) {
@@ -2305,11 +2337,30 @@ async function executeAutonomousNegotiation({
 // 🤖 AUTONOMOUS ZERO-TOUCH WHATSAPP PROCUREMENT ENGINE
 // ============================================================
 const ACTIVE_WHATSAPP_SESSIONS = new Map();
+const MAX_ACTIVE_WHATSAPP_SESSIONS = 500;
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 Hours TTL
+
+function cleanupExpiredWhatsAppSessions() {
+  const now = Date.now();
+  for (const [key, session] of ACTIVE_WHATSAPP_SESSIONS.entries()) {
+    if (session && session.lastActivity && (now - session.lastActivity > SESSION_TTL_MS)) {
+      ACTIVE_WHATSAPP_SESSIONS.delete(key);
+    }
+  }
+  if (ACTIVE_WHATSAPP_SESSIONS.size > MAX_ACTIVE_WHATSAPP_SESSIONS) {
+    const keysToDelete = Array.from(ACTIVE_WHATSAPP_SESSIONS.keys()).slice(0, ACTIVE_WHATSAPP_SESSIONS.size - MAX_ACTIVE_WHATSAPP_SESSIONS);
+    for (const k of keysToDelete) {
+      ACTIVE_WHATSAPP_SESSIONS.delete(k);
+    }
+  }
+}
+setInterval(cleanupExpiredWhatsAppSessions, 15 * 60 * 1000);
 
 /**
  * Initiate an Autonomous WhatsApp Restock Session for a Low-Stock Product
  */
 function initiateAutoRestockForProduct(productId, productData, qty = 60) {
+  cleanupExpiredWhatsAppSessions();
   const profile = loadFirmProfile();
   const candidates = rankVendorsForProduct(productId, productData, qty);
   if (!candidates || candidates.length === 0) {
@@ -2362,7 +2413,8 @@ function initiateAutoRestockForProduct(productId, productData, qty = 60) {
       }
     ],
     whatsappUrl: waUrl,
-    startedAt: new Date().toISOString()
+    startedAt: new Date().toISOString(),
+    lastActivity: Date.now()
   };
 
   ACTIVE_WHATSAPP_SESSIONS.set(sessionId, session);
@@ -2374,27 +2426,45 @@ function initiateAutoRestockForProduct(productId, productData, qty = 60) {
  * Handle incoming reply from vendor on WhatsApp without any human intervention
  */
 async function handleIncomingWhatsAppReply({ from, message, sessionId = null, posBridge = null }) {
+  cleanupExpiredWhatsAppSessions();
   const profile = loadFirmProfile();
 
   // Clean phone number
   const cleanPhone = (from || '').toString().replace(/[^0-9]/g, '');
   const normalizedPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
 
-  // Lookup active session
+  // Lookup active session strictly without unsafe global fallback
   let session = (sessionId && ACTIVE_WHATSAPP_SESSIONS.get(sessionId)) || 
-                ACTIVE_WHATSAPP_SESSIONS.get(normalizedPhone) ||
-                Array.from(ACTIVE_WHATSAPP_SESSIONS.values()).reverse()[0];
+                ACTIVE_WHATSAPP_SESSIONS.get(normalizedPhone);
 
-  // If no active session found, auto-bootstrap one for default SKU
+  // If still not matched, check if phone belongs to any known vendor with an active pending session
   if (!session) {
-    const initRes = initiateAutoRestockForProduct('p_snake_plant_10in', {
-      id: 'p_snake_plant_10in',
-      name: 'Snake Plant (Sansevieria Laurentii)',
-      price: 499.00
-    }, 60);
-    session = initRes.session;
+    for (const active of ACTIVE_WHATSAPP_SESSIONS.values()) {
+      if (active && active.vendor) {
+        const vPhone = (active.vendor.whatsapp || active.vendor.phone || '').replace(/[^0-9]/g, '');
+        const normVPhone = vPhone.length === 10 ? '91' + vPhone : vPhone;
+        if (normVPhone === normalizedPhone && active.status === 'AWAITING_VENDOR_REPLY') {
+          session = active;
+          break;
+        }
+      }
+    }
   }
 
+  // If STILL no active session found, safely isolate sender - NEVER hijack another vendor's transaction
+  if (!session) {
+    const isolatedReply = `Namaste. We received your message, but no active procurement order or negotiation session was found for phone number +${normalizedPhone}. If this is regarding an open Purchase Order or quotation, please quote the PO number or contact store procurement.`;
+    return {
+      status: 'NO_ACTIVE_SESSION',
+      action: 'UNRECOGNIZED_SENDER_ISOLATED',
+      agentReply: isolatedReply,
+      securityReason: 'UNMAPPED_SENDER_ISOLATED',
+      whatsappUrl: `https://api.whatsapp.com/send?phone=${normalizedPhone}&text=${encodeURIComponent(isolatedReply)}`,
+      session: null
+    };
+  }
+
+  session.lastActivity = Date.now();
   const product = { id: session.productId, name: session.productName, price: session.productPrice };
   const vendor = session.vendor;
   const quantity = session.quantity;
@@ -2428,8 +2498,14 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
   const priceMatches = (message || '').match(/(?:₹|rs\.?|inr)?\s*(\d{2,5}(?:\.\d{1,2})?)/i);
   let vendorOfferedPrice = priceMatches ? parseFloat(priceMatches[1]) : null;
 
-  // Check for acceptance keywords (e.g. "agreed", "confirmed", "ok", "done", "yes")
-  const isAcceptance = /\b(agree|agreed|confirmed|confirm|deal|ok|done|yes|pack|loading)\b/i.test(message || '');
+  // Check for negation words (not, no, never, cannot, can't, don't, etc.)
+  const hasNegation = /\b(not|no|never|cannot|can't|cant|dont|don't|won't|wont|unable|impossible|reject|rejected|decline|declined|cancel|cancelled)\b/i.test(message || '');
+  const isQuestion = /\?/.test(message || '');
+
+  // Check for affirmative acceptance (ONLY valid if NOT negated and NOT a question)
+  const isAffirmativePhrase = /\b(agreed|deal\s+done|deal\s+confirmed|we\s+agree|price\s+accepted|order\s+confirmed|terms\s+accepted|done\s+deal|confirmed)\b/i.test(message || '');
+  const isExactShortAccept = /^(ok|okay|yes|done|agreed|confirm|deal)$/i.test((message || '').trim().toLowerCase());
+  const isAcceptance = !hasNegation && !isQuestion && (isAffirmativePhrase || isExactShortAccept);
 
   session.turnCount++;
   session.dialogue.push({
@@ -2440,9 +2516,43 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
     priceDetected: vendorOfferedPrice
   });
 
-  // CASE 1: Vendor Accepted our offer or offered price <= ceilingCost
-  if (isAcceptance || (vendorOfferedPrice && vendorOfferedPrice <= session.ceilingCost)) {
-    const finalPrice = vendorOfferedPrice || session.currentOffer;
+  // Check if vendor explicitly rejected/declined to supply
+  const isVendorRejection = hasNegation && /\b(reject|declined?|cancel|cannot supply|no stock|unavailable|out of stock|stop)\b/i.test(message || '');
+  if (isVendorRejection) {
+    session.status = 'VENDOR_DECLINED';
+    const declineReply = `Namaste ${vendor.contact_person || 'Partner'}. We understand and have noted your decline for this restock batch. We will update our procurement records and pause replenishment requests for ${product.name}. Thank you!`;
+    session.dialogue.push({
+      turn: session.turnCount + 1,
+      sender: 'AGENT',
+      message: declineReply,
+      timestamp: new Date().toLocaleTimeString(),
+      status: 'VENDOR_DECLINED'
+    });
+    const cleanVendorPhone = (vendor.whatsapp || normalizedPhone).replace(/[^0-9]/g, '');
+    const waUrl = `https://api.whatsapp.com/send?phone=${cleanVendorPhone}&text=${encodeURIComponent(declineReply)}`;
+    return {
+      status: 'VENDOR_DECLINED',
+      action: 'NEGOTIATION_TERMINATED_BY_VENDOR',
+      agentReply: declineReply,
+      whatsappUrl: waUrl,
+      session
+    };
+  }
+
+  // CRITICAL CEILING GUARD:
+  // A deal can ONLY close if:
+  // 1) vendor explicitly accepted our offer (in which case finalPrice = session.currentOffer <= ceilingCost), OR
+  // 2) vendor offered a price <= ceilingCost without negation (in which case finalPrice = vendorOfferedPrice <= ceilingCost)
+  // If vendor quoted a price > ceilingCost, it can NEVER close automatically, even if they wrote "deal" or "ok"!
+  const canCloseDeal = isAcceptance 
+    ? (vendorOfferedPrice !== null ? vendorOfferedPrice <= session.ceilingCost : true)
+    : (vendorOfferedPrice !== null && vendorOfferedPrice <= session.ceilingCost && !hasNegation);
+
+  // CASE 1: Vendor Accepted our offer or offered acceptable price <= ceilingCost
+  if (canCloseDeal) {
+    const finalPrice = (vendorOfferedPrice !== null && vendorOfferedPrice <= session.ceilingCost) 
+      ? vendorOfferedPrice 
+      : session.currentOffer;
     const totalAmount = finalPrice * quantity;
     const poNumber = `PO-MERLOT-${Date.now().toString().slice(-6)}`;
     const paymentRef = `UPI-MERLOT-${Date.now().toString().slice(-8)}`;
@@ -2528,11 +2638,15 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
     };
   }
 
-  // CASE 2: Vendor offered higher price > ceilingCost -> Calculate Calibrated Ackerman Counter-Offer
+  // CASE 2: Vendor offered higher price > ceilingCost or negotiation ongoing -> Calculate Calibrated Ackerman Counter-Offer
   const previousOffer = session.currentOffer;
+  const targetForCounter = (vendorOfferedPrice && vendorOfferedPrice > session.ceilingCost)
+    ? session.ceilingCost
+    : (vendorOfferedPrice || session.ceilingCost);
+
   const nextCounter = Math.min(
     session.ceilingCost,
-    Math.round(previousOffer + ((vendorOfferedPrice || session.ceilingCost) - previousOffer) * 0.45)
+    Math.round(previousOffer + (targetForCounter - previousOffer) * 0.45)
   );
   session.currentOffer = nextCounter;
 
@@ -2595,7 +2709,15 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
 }
 
 function getActiveWhatsAppSessions() {
-  return Array.from(ACTIVE_WHATSAPP_SESSIONS.values());
+  const seen = new Set();
+  const sessions = [];
+  for (const s of ACTIVE_WHATSAPP_SESSIONS.values()) {
+    if (s && s.sessionId && !seen.has(s.sessionId)) {
+      seen.add(s.sessionId);
+      sessions.push(s);
+    }
+  }
+  return sessions;
 }
 
 const ragProcurement = {
@@ -3913,7 +4035,7 @@ router.get(['/api/inventory-agent/pos-status', '/api/inventory/pos-status', '/po
 });
 
 // 9. POST /configure-pos - Reconfigure POS Connection Address & Database Path
-router.post(['/api/inventory-agent/configure-pos', '/api/inventory/configure-pos', '/configure-pos'], async (req, res) => {
+router.post(['/api/inventory-agent/configure-pos', '/api/inventory/configure-pos', '/configure-pos'], requireAuth, async (req, res) => {
   try {
     const { apiUrl, dbPath, tenantId } = req.body || {};
     const updatedStatus = posBridge.setPosAddress({ apiUrl, dbPath, tenantId });
@@ -3963,7 +4085,7 @@ router.post(['/api/inventory-agent/negotiate', '/api/inventory/negotiate', '/neg
 });
 
 // 11. POST /approve-and-pay - Execute Payment & Authorize Dispatch into POS
-router.post(['/api/inventory-agent/approve-and-pay', '/api/inventory/approve-and-pay', '/approve-and-pay'], async (req, res) => {
+router.post(['/api/inventory-agent/approve-and-pay', '/api/inventory/approve-and-pay', '/approve-and-pay'], requireAuth, async (req, res) => {
   try {
     const { settlement } = req.body || {};
     if (!settlement || !settlement.po_number) {
@@ -4194,8 +4316,8 @@ router.get(['/api/inventory-agent/watchdog-status', '/api/inventory/watchdog-sta
   }
 });
 
-// 12e. POST /watchdog-toggle - Toggle Autonomous Background Scanning
-router.post(['/api/inventory-agent/watchdog-toggle', '/api/inventory/watchdog-toggle', '/watchdog-toggle'], (req, res) => {
+// 12e. POST /watchdog-toggle - Toggle Autonomous Background Scanning (Protected by requireAuth)
+router.post(['/api/inventory-agent/watchdog-toggle', '/api/inventory/watchdog-toggle', '/watchdog-toggle'], requireAuth, (req, res) => {
   try {
     const { enable, intervalMinutes } = req.body;
     if (enable === true) {
@@ -4233,8 +4355,41 @@ router.get(['/api/inventory-agent/whatsapp-gateway-config', '/api/inventory/what
   }
 });
 
-// 12g. GET /env-config - Safe Client Production Config Retrieval
-router.get(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/env-config'], (req, res) => {
+// Helper to safely update .env file preserving existing variables, comments, and structure
+function safeUpdateEnv(updates = {}) {
+  const envPath = resolveAppPath('.env');
+  let lines = [];
+  try {
+    if (fs.existsSync(envPath)) {
+      lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+    }
+  } catch (e) {}
+
+  const updatedKeys = new Set();
+  const newLines = lines.map(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return line;
+    const eqIdx = line.indexOf('=');
+    if (eqIdx === -1) return line;
+    const key = line.slice(0, eqIdx).trim();
+    if (Object.prototype.hasOwnProperty.call(updates, key)) {
+      updatedKeys.add(key);
+      return `${key}=${updates[key]}`;
+    }
+    return line;
+  });
+
+  for (const [key, val] of Object.entries(updates)) {
+    if (!updatedKeys.has(key)) {
+      newLines.push(`${key}=${val}`);
+    }
+  }
+
+  fs.writeFileSync(envPath, newLines.join('\n'), 'utf8');
+}
+
+// 12g. GET /env-config - Safe Client Production Config Retrieval (Protected by requireAuth)
+router.get(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/env-config'], requireAuth, (req, res) => {
   try {
     res.json({
       status: 'success',
@@ -4245,7 +4400,8 @@ router.get(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/en
         has_gemini_key: Boolean(process.env.GEMINI_API_KEY),
         auto_restock_daemon: process.env.AUTO_RESTOCK_DAEMON !== 'false',
         scan_interval_minutes: parseInt(process.env.RESTOCK_SCAN_INTERVAL_MINUTES || '10', 10),
-        pos_db_path: process.env.POS_DB_PATH || 'C:/Users/asus/Downloads/retail-pos-app/backend/localdb.sqlite',
+        pos_db_path: process.env.POS_DB_PATH || '',
+        agent_api_key: process.env.AGENT_API_KEY || 'merlot_secure_agent_key_2026',
         active_provider: whatsappService.getStatus().activeProvider
       }
     });
@@ -4254,8 +4410,8 @@ router.get(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/en
   }
 });
 
-// 12h. POST /env-config - Save Production Client Keys & Live Reconfigure
-router.post(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/env-config'], (req, res) => {
+// 12h. POST /env-config - Save Production Client Keys & Live Reconfigure (Protected by requireAuth)
+router.post(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/env-config'], requireAuth, (req, res) => {
   try {
     const {
       meta_phone_number_id,
@@ -4264,50 +4420,50 @@ router.post(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/e
       gemini_api_key,
       auto_restock_daemon,
       scan_interval_minutes,
-      pos_db_path
-    } = req.body;
+      pos_db_path,
+      agent_api_key
+    } = req.body || {};
 
-    const envPath = resolveAppPath('.env');
-    let envContent = '';
-    try {
-      if (fs.existsSync(envPath)) {
-        envContent = fs.readFileSync(envPath, 'utf8');
-      }
-    } catch (e) {}
+    const sanitizeVal = v => (typeof v === 'string' ? v.replace(/[\r\n]/g, '').trim() : '');
+    const envUpdates = {};
 
-    // Update in memory process.env
-    if (meta_phone_number_id !== undefined) process.env.META_WA_PHONE_NUMBER_ID = meta_phone_number_id.trim();
-    if (meta_access_token !== undefined && meta_access_token.trim()) process.env.META_WA_ACCESS_TOKEN = meta_access_token.trim();
-    if (meta_verify_token !== undefined) process.env.META_WA_VERIFY_TOKEN = meta_verify_token.trim();
-    if (gemini_api_key !== undefined && gemini_api_key.trim()) process.env.GEMINI_API_KEY = gemini_api_key.trim();
-    if (auto_restock_daemon !== undefined) process.env.AUTO_RESTOCK_DAEMON = String(auto_restock_daemon);
-    if (scan_interval_minutes !== undefined) process.env.RESTOCK_SCAN_INTERVAL_MINUTES = String(scan_interval_minutes);
-    if (pos_db_path !== undefined) process.env.POS_DB_PATH = pos_db_path.trim();
+    // Update in memory process.env & stage for disk update with strict sanitization
+    if (meta_phone_number_id !== undefined) {
+      process.env.META_WA_PHONE_NUMBER_ID = sanitizeVal(meta_phone_number_id);
+      envUpdates.META_WA_PHONE_NUMBER_ID = process.env.META_WA_PHONE_NUMBER_ID;
+    }
+    if (meta_access_token !== undefined && sanitizeVal(meta_access_token)) {
+      process.env.META_WA_ACCESS_TOKEN = sanitizeVal(meta_access_token);
+      envUpdates.META_WA_ACCESS_TOKEN = process.env.META_WA_ACCESS_TOKEN;
+    }
+    if (meta_verify_token !== undefined) {
+      process.env.META_WA_VERIFY_TOKEN = sanitizeVal(meta_verify_token) || 'merlot_procure_agent_2026';
+      envUpdates.META_WA_VERIFY_TOKEN = process.env.META_WA_VERIFY_TOKEN;
+    }
+    if (gemini_api_key !== undefined && sanitizeVal(gemini_api_key)) {
+      process.env.GEMINI_API_KEY = sanitizeVal(gemini_api_key);
+      envUpdates.GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    }
+    if (auto_restock_daemon !== undefined) {
+      process.env.AUTO_RESTOCK_DAEMON = String(Boolean(auto_restock_daemon));
+      envUpdates.AUTO_RESTOCK_DAEMON = process.env.AUTO_RESTOCK_DAEMON;
+    }
+    if (scan_interval_minutes !== undefined) {
+      const parsedMins = Math.max(1, parseInt(scan_interval_minutes, 10) || 10);
+      process.env.RESTOCK_SCAN_INTERVAL_MINUTES = String(parsedMins);
+      envUpdates.RESTOCK_SCAN_INTERVAL_MINUTES = process.env.RESTOCK_SCAN_INTERVAL_MINUTES;
+    }
+    if (pos_db_path !== undefined) {
+      process.env.POS_DB_PATH = sanitizeVal(pos_db_path);
+      envUpdates.POS_DB_PATH = process.env.POS_DB_PATH;
+    }
+    if (agent_api_key !== undefined && sanitizeVal(agent_api_key)) {
+      process.env.AGENT_API_KEY = sanitizeVal(agent_api_key);
+      envUpdates.AGENT_API_KEY = process.env.AGENT_API_KEY;
+    }
 
-    // Write to .env file
-    const newEnv = [
-      '# 🌿 Merlot AutoProcure AI - Production Environment Configuration',
-      'PORT=' + (process.env.PORT || '5001'),
-      'NODE_ENV=production',
-      '',
-      '# Meta WhatsApp Business Cloud API',
-      `META_WA_PHONE_NUMBER_ID=${process.env.META_WA_PHONE_NUMBER_ID || ''}`,
-      `META_WA_ACCESS_TOKEN=${process.env.META_WA_ACCESS_TOKEN || ''}`,
-      `META_WA_VERIFY_TOKEN=${process.env.META_WA_VERIFY_TOKEN || 'merlot_procure_agent_2026'}`,
-      'META_WA_API_VERSION=v20.0',
-      '',
-      '# Google Gemini AI Key',
-      `GEMINI_API_KEY=${process.env.GEMINI_API_KEY || ''}`,
-      '',
-      '# Autonomous Background Daemon',
-      `AUTO_RESTOCK_DAEMON=${process.env.AUTO_RESTOCK_DAEMON || 'true'}`,
-      `RESTOCK_SCAN_INTERVAL_MINUTES=${process.env.RESTOCK_SCAN_INTERVAL_MINUTES || '10'}`,
-      '',
-      '# POS Integration',
-      `POS_DB_PATH=${process.env.POS_DB_PATH || 'C:/Users/asus/Downloads/retail-pos-app/backend/localdb.sqlite'}`
-    ].join('\n');
-
-    fs.writeFileSync(envPath, newEnv, 'utf8');
+    // Safely update .env file preserving existing custom variables and comments
+    safeUpdateEnv(envUpdates);
 
     // Refresh live services
     whatsappService.refreshConfig();
@@ -4321,7 +4477,7 @@ router.post(['/api/inventory-agent/env-config', '/api/inventory/env-config', '/e
 
     res.json({
       status: 'success',
-      message: '✅ Production client configuration saved and active!',
+      message: '✅ Production client configuration safely saved and active!',
       gateway: whatsappService.getStatus(),
       watchdog: autoWatchdog.getStatus()
     });
@@ -4398,8 +4554,8 @@ router.get(['/api/inventory-agent/profile', '/api/inventory/profile', '/profile'
   }
 });
 
-// 15. POST /profile - Update Firm Registration & UPI Configuration
-router.post(['/api/inventory-agent/profile', '/api/inventory/profile', '/profile'], (req, res) => {
+// 15. POST /profile - Update Firm Registration & UPI Configuration (Protected by requireAuth)
+router.post(['/api/inventory-agent/profile', '/api/inventory/profile', '/profile'], requireAuth, (req, res) => {
   try {
     const saveRes = ragProcurement.saveFirmProfile(req.body);
     if (!saveRes.success) {
@@ -4429,16 +4585,38 @@ router.get(['/api/inventory-agent/vendors-list', '/api/inventory/vendors-list', 
   }
 });
 
-// 17. POST /import-vendors-csv - Import or Reload Vendors CSV
-router.post(['/api/inventory-agent/import-vendors-csv', '/api/inventory/import-vendors-csv', '/import-vendors-csv'], (req, res) => {
+// 17. POST /import-vendors-csv - Import or Reload Vendors CSV (Protected by requireAuth & Pre-Validated)
+router.post(['/api/inventory-agent/import-vendors-csv', '/api/inventory/import-vendors-csv', '/import-vendors-csv'], requireAuth, (req, res) => {
   try {
     const { csv_content } = req.body || {};
     const csvPath = resolveAppPath('vendors.csv');
     
-    if (csv_content && typeof csv_content === 'string' && csv_content.trim().length > 10) {
-      fs.writeFileSync(csvPath, csv_content, 'utf8');
+    if (csv_content && typeof csv_content === 'string') {
+      const trimmed = csv_content.trim();
+      if (trimmed.length < 10 || !trimmed.includes(',')) {
+        return res.status(400).json({ error: 'Invalid CSV content: payload is too short or missing valid CSV comma separators.' });
+      }
+
+      // Pre-validate CSV in memory first to prevent disk corruption
+      const testResult = ragProcurement.loadVendorsFromCSV(trimmed);
+      if (!testResult || !testResult.success || testResult.count === 0) {
+        return res.status(400).json({ 
+          error: 'CSV validation failed: ' + ((testResult && (testResult.message || testResult.error)) || 'No valid vendor rows could be parsed.') 
+        });
+      }
+
+      // Pre-validation passed: safely write verified content to disk
+      fs.writeFileSync(csvPath, trimmed, 'utf8');
+
+      return res.json({
+        status: 'success',
+        message: `✅ Successfully validated, imported and indexed ${testResult.count} nursery vendors from CSV!`,
+        count: testResult.count,
+        vendors: testResult.vendors
+      });
     }
 
+    // Fallback: reload from existing file on disk
     const loadResult = ragProcurement.loadVendorsFromCSV(csvPath);
     if (!loadResult.success) {
       return res.status(400).json({ error: loadResult.message || loadResult.error });
@@ -4446,7 +4624,7 @@ router.post(['/api/inventory-agent/import-vendors-csv', '/api/inventory/import-v
 
     res.json({
       status: 'success',
-      message: `✅ Successfully imported and indexed ${loadResult.count} nursery vendors from CSV!`,
+      message: `✅ Successfully loaded and indexed ${loadResult.count} nursery vendors from CSV!`,
       count: loadResult.count,
       vendors: loadResult.vendors
     });

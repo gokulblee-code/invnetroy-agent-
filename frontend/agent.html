@@ -783,6 +783,19 @@
             </span>
             <input type="hidden" id="ent-pos-path" value="C:/Users/asus/Downloads/retail-pos-app/backend/localdb.sqlite" />
           </div>
+
+          <!-- Agent Security API Key Strip -->
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">🔒</span>
+                <span class="font-bold text-slate-800">Agent API Security Key:</span>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono">Protected by X-Agent-Key</span>
+            </div>
+            <input type="password" id="ent-agent-key" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-800" placeholder="merlot_secure_agent_key_2026" />
+            <p class="text-[10px] text-slate-400">Secures administrative reconfiguration and financial dispatch endpoints from unauthorized access.</p>
+          </div>
         </div>
 
       </div>
@@ -1979,6 +1992,30 @@
   </div>
 
   <script>
+    // 🛡️ Global Security: Automatic Agent API Key Interceptor for authenticated backend endpoints
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      options = options || {};
+      const headers = new Headers(options.headers || {});
+      const apiKey = (localStorage.getItem('merlot_agent_api_key') || 'merlot_secure_agent_key_2026').trim();
+      if (!headers.has('X-Agent-Key')) {
+        headers.set('X-Agent-Key', apiKey);
+      }
+      options.headers = headers;
+      return originalFetch(url, options);
+    };
+
+    // 🛡️ Global Security: HTML Entity Sanitizer to prevent XSS across chat dialogues, products, and logs
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     let currentEngineMode = 'auto';
     const appliedClearanceItems = new Set(JSON.parse(localStorage.getItem('APPLIED_CLEARANCE_ITEMS') || '[]'));
 
@@ -2325,14 +2362,14 @@
               ${idx + 1}
             </span>
             <div>
-              <h5 class="font-bold text-slate-800 text-xs">${item.name}</h5>
+              <h5 class="font-bold text-slate-800 text-xs">${escapeHtml(item.name)}</h5>
               <p class="text-[10px] text-slate-500">
-                Stock: <b class="${item.stock <= item.min_stock ? 'text-red-600 font-extrabold' : 'text-slate-700'}">${item.stock ?? 0}</b> | 
-                ROP: <b>${item.min_stock ?? 20}</b> | Target: <b>₹${item.price ?? 499}</b>
+                Stock: <b class="${item.stock <= item.min_stock ? 'text-red-600 font-extrabold' : 'text-slate-700'}">${Number(item.stock ?? 0)}</b> | 
+                ROP: <b>${Number(item.min_stock ?? 20)}</b> | Target: <b>₹${Number(item.price ?? 499)}</b>
               </p>
             </div>
           </div>
-          <button type="button" onclick="removeMonitoredItem('${item.id || item.name}')" title="Remove Item" class="text-slate-300 hover:text-red-500 p-1 text-xs">
+          <button type="button" onclick="removeMonitoredItem(decodeURIComponent('${encodeURIComponent(item.id || item.name)}'))" title="Remove Item" class="text-slate-300 hover:text-red-500 p-1 text-xs">
             <i class="fa-solid fa-trash-can"></i>
           </button>
         `;
@@ -2422,6 +2459,11 @@
           if (hiddenInterval) hiddenInterval.value = cfg.scan_interval_minutes || 10;
           document.getElementById('ent-pos-path').value = cfg.pos_db_path || 'C:/Users/asus/Downloads/retail-pos-app/backend/localdb.sqlite';
           
+          const keyInput = document.getElementById('ent-agent-key');
+          if (keyInput) {
+            keyInput.value = localStorage.getItem('merlot_agent_api_key') || cfg.agent_api_key || 'merlot_secure_agent_key_2026';
+          }
+          
           if (cfg.has_meta_access_token) {
             document.getElementById('ent-meta-access-token').placeholder = '•••••••••••••••• (Connected)';
           }
@@ -2478,6 +2520,13 @@
         scan_interval_minutes: intervalMinutes,
         pos_db_path: document.getElementById('ent-pos-path').value.trim()
       };
+
+      const keyInput = document.getElementById('ent-agent-key');
+      const agentKey = keyInput ? keyInput.value.trim() : '';
+      if (agentKey) {
+        localStorage.setItem('merlot_agent_api_key', agentKey);
+        payload.agent_api_key = agentKey;
+      }
 
       const spendingCap = parseFloat(document.getElementById('ent-spending-cap').value) || 25000;
       const targetMargin = parseFloat(document.getElementById('ent-target-margin').value) || 50;
@@ -2818,7 +2867,9 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
 
         expiryContainer.innerHTML = sortedItems.map(item => {
           const isApplied = item.isClearanceApplied || appliedClearanceItems.has(item.name);
-          const safeName = item.name.replace(/'/g, "\\'");
+          const safeItemName = escapeHtml(item.name);
+          const safeAction = escapeHtml(item.recommended_action || '');
+          const encodedItemName = encodeURIComponent(item.name);
 
           return `
           <div class="bg-white p-4.5 rounded-xl border ${isApplied ? 'border-emerald-300 bg-emerald-50/30' : 'border-amber-200/80'} shadow-2xs flex justify-between items-center space-x-4 transition">
@@ -2826,12 +2877,12 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
               <div class="flex items-center space-x-2">
                 ${isApplied ? `<span class="text-xs px-2.5 py-0.5 rounded-md font-mono font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">✓ 30% FEFO Clearance Active</span>` : ''}
                 <span class="text-xs px-2 py-0.5 rounded-md font-mono font-bold uppercase ${item.urgency === 'CRITICAL_FEFO' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}">
-                  ${item.expiryDays} Days Expiry Left
+                  ${Number(item.expiryDays)} Days Expiry Left
                 </span>
-                <span class="text-xs text-slate-500 font-mono">Stock: ${item.stock} units</span>
+                <span class="text-xs text-slate-500 font-mono">Stock: ${Number(item.stock)} units</span>
               </div>
-              <p class="font-bold text-sm text-slate-900">${item.name}</p>
-              <p class="text-xs ${isApplied ? 'text-emerald-700 font-bold' : 'text-amber-800 font-medium'}">💡 ${isApplied ? 'Clearance discount active on POS counter.' : item.recommended_action}</p>
+              <p class="font-bold text-sm text-slate-900">${safeItemName}</p>
+              <p class="text-xs ${isApplied ? 'text-emerald-700 font-bold' : 'text-amber-800 font-medium'}">💡 ${isApplied ? 'Clearance discount active on POS counter.' : safeAction}</p>
             </div>
             <div>
               ${isApplied ? `
@@ -2839,7 +2890,7 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
                   <span>✓ Clearance Active</span>
                 </button>
               ` : `
-                <button onclick="applyPosDiscount(event, '${safeName}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-2xs">
+                <button onclick="applyPosDiscount(event, decodeURIComponent('${encodedItemName}'))" class="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-2xs">
                   Apply Clearance
                 </button>
               `}
@@ -2854,12 +2905,25 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
       // 3. Render Stock Replenishment Table
       const reorderContainer = document.getElementById('reorder-table-container');
       if (data.reorder_recommendations && data.reorder_recommendations.length > 0) {
-        reorderContainer.innerHTML = data.reorder_recommendations.map(rec => `
+        reorderContainer.innerHTML = data.reorder_recommendations.map(rec => {
+          const safeCategory = escapeHtml(rec.category);
+          const safeProdName = escapeHtml(rec.product_name);
+          const encProdId = encodeURIComponent(rec.product_id);
+          const encProdName = encodeURIComponent(rec.product_name);
+          const safeVendorName = escapeHtml(rec.best_vendor?.vendor_name || 'Vendor');
+          const encVendorPhone = encodeURIComponent(rec.best_vendor?.phone || '');
+          const encVendorName = encodeURIComponent(rec.best_vendor?.vendor_name || '');
+          const encVendorId = encodeURIComponent(rec.best_vendor?.vendor_id || '');
+          const unitCost = Number(rec.best_vendor?.unit_cost || 0);
+          const recQty = Number(rec.recommended_qty || 0);
+          const safeAllVendors = encodeURIComponent(JSON.stringify(rec.all_vendors || []));
+
+          return `
           <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-4">
             <div class="flex justify-between items-start">
               <div>
-                <span class="text-[10px] uppercase font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-md font-mono">${rec.category}</span>
-                <h3 class="text-base font-bold text-slate-900 mt-1">${rec.product_name}</h3>
+                <span class="text-[10px] uppercase font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-md font-mono">${safeCategory}</span>
+                <h3 class="text-base font-bold text-slate-900 mt-1">${safeProdName}</h3>
                 <p class="text-xs text-slate-500 font-mono mt-0.5">Current Stock: <b class="text-amber-700">${rec.current_stock}</b> • Sales Velocity: <b class="text-slate-900">${rec.daily_sales_velocity} units/day</b> • Stockout in: <b class="text-red-600">${rec.days_inventory_left} Days</b></p>
               </div>
               <div class="text-right">
@@ -2881,17 +2945,17 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
                   </span>
                 </div>
                 
-                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-sans">${rec.execution_engine.llm_reasoning || 'AI analysis complete.'}</p>
+                <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-sans">${escapeHtml(rec.execution_engine.llm_reasoning || 'AI analysis complete.')}</p>
                 
                 ${rec.execution_engine.llm_insights ? `
                   <div class="pt-2 border-t border-slate-200/60 grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
                     <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 shadow-2xs">
                       <span class="text-amber-800 font-bold">🤝 AI Negotiator Strategy:</span>
-                      <p class="text-slate-600 mt-0.5">${rec.execution_engine.llm_insights.vendor_negotiation_tip || 'N/A'}</p>
+                      <p class="text-slate-600 mt-0.5">${escapeHtml(rec.execution_engine.llm_insights.vendor_negotiation_tip || 'N/A')}</p>
                     </div>
                     <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 shadow-2xs">
                       <span class="text-emerald-800 font-bold">📌 Merchandising Placement:</span>
-                      <p class="text-slate-600 mt-0.5">${rec.execution_engine.llm_insights.fefo_risk_comment || 'N/A'}</p>
+                      <p class="text-slate-600 mt-0.5">${escapeHtml(rec.execution_engine.llm_insights.fefo_risk_comment || 'N/A')}</p>
                     </div>
                   </div>
                 ` : ''}
@@ -2903,7 +2967,7 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
               <div class="space-y-1">
                 <div class="flex items-center space-x-2">
                   <span class="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-md font-bold">🏆 Winning Vendor</span>
-                  <span class="text-xs font-bold text-slate-900">${rec.best_vendor.vendor_name}</span>
+                  <span class="text-xs font-bold text-slate-900">${safeVendorName}</span>
                   <span class="text-xs text-amber-700 font-bold">★ ${rec.best_vendor.rating}</span>
                 </div>
                 <p class="text-xs text-slate-600 font-mono">
@@ -2912,25 +2976,26 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
               </div>
 
               <div class="flex flex-wrap items-center gap-2">
-                <button onclick='openNegotiateModal("${rec.product_id}", "${rec.product_name}", ${rec.recommended_qty})' class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs flex items-center space-x-1.5">
+                <button onclick="openNegotiateModal(decodeURIComponent('${encProdId}'), decodeURIComponent('${encProdName}'), ${recQty})" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs flex items-center space-x-1.5">
                   <i class="fa-solid fa-handshake text-sm"></i>
                   <span>🤖 Auto-Negotiate & Pay</span>
                 </button>
-                <button onclick='pingVendorWhatsApp("${rec.best_vendor.phone}", "${rec.best_vendor.vendor_name}", "${rec.product_name}", ${rec.recommended_qty}, ${rec.best_vendor.unit_cost})' class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs flex items-center space-x-1.5">
+                <button onclick="pingVendorWhatsApp(decodeURIComponent('${encVendorPhone}'), decodeURIComponent('${encVendorName}'), decodeURIComponent('${encProdName}'), ${recQty}, ${unitCost})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs flex items-center space-x-1.5">
                   <i class="fa-brands fa-whatsapp text-sm"></i>
                   <span>WhatsApp Bargain</span>
                 </button>
-                <button onclick='dispatchPO("${rec.best_vendor.vendor_id}", "${rec.best_vendor.vendor_name}", "${rec.best_vendor.phone}", "${rec.product_name}", ${rec.recommended_qty}, ${rec.best_vendor.unit_cost})' class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs flex items-center space-x-1.5">
+                <button onclick="dispatchPO(decodeURIComponent('${encVendorId}'), decodeURIComponent('${encVendorName}'), decodeURIComponent('${encVendorPhone}'), decodeURIComponent('${encProdName}'), ${recQty}, ${unitCost})" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs flex items-center space-x-1.5">
                   <i class="fa-brands fa-whatsapp text-sm text-emerald-400"></i>
                   <span>Dispatch PO</span>
                 </button>
-                <button onclick='openVendorModal(${JSON.stringify(rec.all_vendors)}, "${rec.product_name}")' class="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs px-3 py-2 rounded-lg font-medium transition shadow-2xs">
+                <button onclick="openVendorModal(JSON.parse(decodeURIComponent('${safeAllVendors}')), decodeURIComponent('${encProdName}'))" class="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs px-3 py-2 rounded-lg font-medium transition shadow-2xs">
                   Compare (${rec.all_vendors.length})
                 </button>
               </div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       } else {
         reorderContainer.innerHTML = `<div class="text-emerald-700 text-xs py-6 text-center font-medium bg-emerald-50/50 rounded-xl border border-emerald-200">✅ All stock levels are healthy above reorder thresholds!</div>`;
       }
@@ -2999,24 +3064,33 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
     function openVendorModal(vendors, prodName) {
       document.getElementById('modal-product-title').innerText = `Vendor Matrix for "${prodName}"`;
       const container = document.getElementById('modal-vendor-list');
-      container.innerHTML = vendors.map(v => `
+      container.innerHTML = (vendors || []).map(v => {
+        const safeVendorName = escapeHtml(v.vendor_name);
+        const encPhone = encodeURIComponent(v.phone || '');
+        const encVendorName = encodeURIComponent(v.vendor_name || '');
+        const encProdName = encodeURIComponent(prodName || '');
+        const moq = Number(v.moq || 20);
+        const unitCost = Number(v.unit_cost || 0);
+
+        return `
         <div class="bg-slate-950 p-4 rounded-xl border ${v.score >= 0.9 ? 'border-emerald-800' : 'border-slate-800'} flex justify-between items-center text-xs">
           <div>
-            <p class="font-bold text-white text-sm">${v.vendor_name}</p>
-            <p class="text-slate-400 font-mono">Lead Time: <b>${v.lead_time_days} Days</b> • MOQ: <b>${v.moq} units</b> • Rating: <b class="text-amber-400">★ ${v.rating}</b></p>
+            <p class="font-bold text-white text-sm">${safeVendorName}</p>
+            <p class="text-slate-400 font-mono">Lead Time: <b>${v.lead_time_days} Days</b> • MOQ: <b>${moq} units</b> • Rating: <b class="text-amber-400">★ ${v.rating}</b></p>
           </div>
           <div class="text-right space-y-1">
-            <span class="font-black text-emerald-400 font-mono text-base block">₹${v.unit_cost.toFixed(2)} / unit</span>
+            <span class="font-black text-emerald-400 font-mono text-base block">₹${unitCost.toFixed(2)} / unit</span>
             <div class="flex items-center space-x-2 justify-end">
               <span class="text-[10px] text-slate-400 font-mono">Score: ${(v.score * 100).toFixed(1)}%</span>
-              <button onclick='pingVendorWhatsApp("${v.phone}", "${v.vendor_name}", "${prodName}", ${v.moq || 20}, ${v.unit_cost})' class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-2 py-0.5 rounded flex items-center space-x-1 shadow-xs transition">
+              <button onclick="pingVendorWhatsApp(decodeURIComponent('${encPhone}'), decodeURIComponent('${encVendorName}'), decodeURIComponent('${encProdName}'), ${moq}, ${unitCost})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-2 py-0.5 rounded flex items-center space-x-1 shadow-xs transition">
                 <i class="fa-brands fa-whatsapp"></i>
                 <span>WhatsApp</span>
               </button>
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       document.getElementById('vendor-modal').classList.remove('hidden');
       document.getElementById('vendor-modal').classList.add('flex');
     }
@@ -3167,19 +3241,31 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
           const vendorPhone = data.settlement?.vendor_whatsapp || data.settlement?.vendor_contact || '9876543210';
           const bubble = document.createElement('div');
           bubble.className = `p-3 rounded-xl text-xs space-y-1.5 ${isAgent ? 'bg-emerald-50 border border-emerald-200 text-slate-900 ml-6' : 'bg-white border border-slate-200 text-slate-900 mr-6 shadow-2xs'}`;
+          
+          const safePhone = encodeURIComponent(vendorPhone);
+          const encodedMsg = encodeURIComponent(d.message || '');
+          const safeSpeakerName = escapeHtml(d.name || '');
+          const safeMessage = escapeHtml(d.message || '');
+          const safeTimestamp = escapeHtml(d.timestamp || '');
+          const safeRagEvidence = d.ragEvidence ? escapeHtml(d.ragEvidence) : '';
+          const safeMbAnswer = d.myblocksCitation ? escapeHtml(d.myblocksCitation.answer || '') : '';
+          const safeBookChapter = d.bookCitation ? escapeHtml(d.bookCitation.chapter || d.bookCitation.tactic || '') : '';
+          const safeBookSource = d.bookCitation ? escapeHtml(d.bookCitation.source || '') : '';
+          const safeBookGuidance = d.bookCitation ? escapeHtml(d.bookCitation.guidance || '') : '';
+
           bubble.innerHTML = `
             <div class="flex justify-between items-center text-[10px] font-bold ${isAgent ? 'text-emerald-800' : 'text-amber-800'}">
-              <span>${isAgent ? '🤖 Autonomous Sourcing Agent' : '👤 ' + d.name}</span>
+              <span>${isAgent ? '🤖 Autonomous Sourcing Agent' : '👤 ' + safeSpeakerName}</span>
               <div class="flex items-center space-x-2">
-                <span class="text-slate-400 font-mono font-normal">${d.timestamp}</span>
-                <button onclick='sendWhatsAppDirectMessage("${vendorPhone}", "${d.message.replace(/"/g, '&quot;').replace(/'/g, "\\'")}")' class="text-[10px] text-emerald-700 hover:text-emerald-900 bg-white border border-emerald-300 font-bold px-2 py-0.5 rounded flex items-center space-x-1 shadow-2xs transition" title="Send this message to vendor via WhatsApp">
+                <span class="text-slate-400 font-mono font-normal">${safeTimestamp}</span>
+                <button onclick="sendWhatsAppDirectMessage(decodeURIComponent('${safePhone}'), decodeURIComponent('${encodedMsg}'))" class="text-[10px] text-emerald-700 hover:text-emerald-900 bg-white border border-emerald-300 font-bold px-2 py-0.5 rounded flex items-center space-x-1 shadow-2xs transition" title="Send this message to vendor via WhatsApp">
                   <i class="fa-brands fa-whatsapp text-emerald-600"></i>
                   <span>Send on WhatsApp</span>
                 </button>
               </div>
             </div>
-            <p class="leading-relaxed font-sans">${d.message}</p>
-            ${d.ragEvidence ? `<span class="inline-block mt-1 bg-white px-2 py-0.5 rounded text-[10px] font-mono text-emerald-700 border border-emerald-200">🔍 RAG: ${d.ragEvidence}</span>` : ''}
+            <p class="leading-relaxed font-sans">${safeMessage}</p>
+            ${safeRagEvidence ? `<span class="inline-block mt-1 bg-white px-2 py-0.5 rounded text-[10px] font-mono text-emerald-700 border border-emerald-200">🔍 RAG: ${safeRagEvidence}</span>` : ''}
             ${d.myblocksCitation ? `
               <div class="mt-1.5 p-2 bg-sky-50/90 rounded-lg border border-sky-200 text-[11px] text-sky-950 flex items-start space-x-2">
                 <span class="text-sm">☁️</span>
@@ -3188,11 +3274,11 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
                     <span class="font-bold text-sky-800">MyBlocks Cloud RAG Guidance</span>
                     ${(d.myblocksCitation.sources && d.myblocksCitation.sources.length > 0) ? `
                       <span class="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                        📄 ${d.myblocksCitation.sources.map(s => (typeof s === 'string' ? s : s.file || s.name || 'Doc')).slice(0, 2).join(', ')}
+                        📄 ${d.myblocksCitation.sources.map(s => escapeHtml(typeof s === 'string' ? s : s.file || s.name || 'Doc')).slice(0, 2).join(', ')}
                       </span>
                     ` : ''}
                   </div>
-                  <p class="text-slate-700 italic mt-0.5 font-sans leading-snug">"${d.myblocksCitation.answer}"</p>
+                  <p class="text-slate-700 italic mt-0.5 font-sans leading-snug">"${safeMbAnswer}"</p>
                 </div>
               </div>
             ` : ''}
@@ -3200,8 +3286,8 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
               <div class="mt-1.5 p-2 bg-amber-50/90 rounded-lg border border-amber-200 text-[11px] text-amber-900 flex items-start space-x-2">
                 <span class="text-sm">📖</span>
                 <div>
-                  <div class="font-bold text-amber-800">${d.bookCitation.chapter || d.bookCitation.tactic} <span class="text-[10px] text-amber-600 font-normal">(${d.bookCitation.source})</span></div>
-                  <p class="text-slate-700 italic mt-0.5 font-serif leading-snug">"${d.bookCitation.guidance}"</p>
+                  <div class="font-bold text-amber-800">${safeBookChapter} <span class="text-[10px] text-amber-600 font-normal">(${safeBookSource})</span></div>
+                  <p class="text-slate-700 italic mt-0.5 font-serif leading-snug">"${safeBookGuidance}"</p>
                 </div>
               </div>
             ` : ''}
@@ -3400,15 +3486,15 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
       const vendorName = currentSettlement?.vendor_name || 'Deccan Flora Wholesale Nursery';
       const vendorPhone = currentSettlement?.vendor_whatsapp || '9876543210';
 
-      // 1. Immediately append Vendor incoming bubble
+      // 1. Immediately append Vendor incoming bubble (Sanitized against XSS)
       const vendorBubble = document.createElement('div');
       vendorBubble.className = 'p-3 rounded-xl text-xs space-y-1 bg-white border border-emerald-300 text-slate-900 mr-6 shadow-xs animate-fadeIn';
       vendorBubble.innerHTML = `
         <div class="flex justify-between items-center text-[10px] font-bold text-emerald-800">
-          <span class="flex items-center space-x-1.5"><i class="fa-brands fa-whatsapp text-emerald-600"></i><span>${vendorName} (Incoming WhatsApp)</span></span>
+          <span class="flex items-center space-x-1.5"><i class="fa-brands fa-whatsapp text-emerald-600"></i><span>${escapeHtml(vendorName)} (Incoming WhatsApp)</span></span>
           <span class="text-slate-400 font-mono font-normal">${new Date().toLocaleTimeString()}</span>
         </div>
-        <p class="leading-relaxed font-sans text-slate-900 font-medium">"${text}"</p>
+        <p class="leading-relaxed font-sans text-slate-900 font-medium">"${escapeHtml(text)}"</p>
       `;
       chatStream.appendChild(vendorBubble);
       chatStream.scrollTop = chatStream.scrollHeight;
@@ -3438,7 +3524,7 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
         const tBubble = document.getElementById('sim-thinking-bubble');
         if (tBubble) tBubble.remove();
 
-        // 3. Append Agent Autonomous Response
+        // 3. Append Agent Autonomous Response (Sanitized against XSS)
         const isDealClosed = data.negotiation_status === 'DEAL_CLOSED';
         const agentBubble = document.createElement('div');
         agentBubble.className = `p-3 rounded-xl text-xs space-y-1.5 ${isDealClosed ? 'bg-emerald-100/80 border border-emerald-400' : 'bg-emerald-50 border border-emerald-200'} text-slate-900 ml-6 shadow-xs animate-fadeIn`;
@@ -3448,17 +3534,17 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
             <div class="flex items-center space-x-2">
               <span class="text-slate-400 font-mono font-normal">${new Date().toLocaleTimeString()}</span>
               ${data.whatsapp_dispatch_url ? `
-                <a href="${data.whatsapp_dispatch_url}" target="_blank" class="text-[10px] bg-white text-emerald-700 hover:text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded font-bold flex items-center space-x-1 shadow-2xs">
+                <a href="${escapeHtml(data.whatsapp_dispatch_url)}" target="_blank" class="text-[10px] bg-white text-emerald-700 hover:text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded font-bold flex items-center space-x-1 shadow-2xs">
                   <i class="fa-brands fa-whatsapp text-emerald-600"></i>
                   <span>Open WhatsApp</span>
                 </a>
               ` : ''}
             </div>
           </div>
-          <p class="leading-relaxed font-sans whitespace-pre-line">${data.agent_reply_text}</p>
+          <p class="leading-relaxed font-sans whitespace-pre-line">${escapeHtml(data.agent_reply_text)}</p>
           <div class="pt-1 flex items-center space-x-2 text-[10px] font-mono text-emerald-800">
-            <span class="bg-white px-2 py-0.5 rounded border border-emerald-200 font-bold">🤖 Action: ${data.autonomous_action}</span>
-            ${data.counterOffered ? `<span class="bg-white px-2 py-0.5 rounded border border-emerald-200">Counter: ₹${data.counterOffered}/unit</span>` : ''}
+            <span class="bg-white px-2 py-0.5 rounded border border-emerald-200 font-bold">🤖 Action: ${escapeHtml(data.autonomous_action || '')}</span>
+            ${data.counterOffered ? `<span class="bg-white px-2 py-0.5 rounded border border-emerald-200">Counter: ₹${Number(data.counterOffered)}/unit</span>` : ''}
           </div>
           ${data.myblocks_guidance ? `
             <div class="mt-1.5 p-2 bg-sky-50 rounded-lg border border-sky-200 text-[11px] text-sky-950 flex items-start space-x-2">
@@ -3468,11 +3554,11 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
                   <span class="font-bold text-sky-800">MyBlocks Cloud RAG Guidance</span>
                   ${(data.myblocks_guidance.sources && data.myblocks_guidance.sources.length > 0) ? `
                     <span class="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                      📄 ${data.myblocks_guidance.sources.map(s => (typeof s === 'string' ? s : s.file || s.name || 'Doc')).slice(0, 2).join(', ')}
+                      📄 ${data.myblocks_guidance.sources.map(s => escapeHtml(typeof s === 'string' ? s : s.file || s.name || 'Doc')).slice(0, 2).join(', ')}
                     </span>
                   ` : ''}
                 </div>
-                <p class="text-slate-700 italic mt-0.5 font-sans leading-snug">"${data.myblocks_guidance.answer}"</p>
+                <p class="text-slate-700 italic mt-0.5 font-sans leading-snug">"${escapeHtml(data.myblocks_guidance.answer || '')}"</p>
               </div>
             </div>
           ` : ''}

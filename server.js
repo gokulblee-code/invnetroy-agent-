@@ -13,6 +13,50 @@ const whatsappService = inventoryRouter.whatsappService;
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Standard Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Lightweight In-Memory Rate Limiter for API endpoints (prevents DoS & brute force)
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 180; // max 180 reqs / min / IP
+const clientRequestCounts = new Map();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of clientRequestCounts.entries()) {
+    if (now - data.startTime > RATE_LIMIT_WINDOW_MS) {
+      clientRequestCounts.delete(ip);
+    }
+  }
+}, RATE_LIMIT_WINDOW_MS);
+
+app.use('/api', (req, res, next) => {
+  const clientIp = req.ip || req.connection.remoteAddress || '127.0.0.1';
+  const now = Date.now();
+  let clientData = clientRequestCounts.get(clientIp);
+
+  if (!clientData || now - clientData.startTime > RATE_LIMIT_WINDOW_MS) {
+    clientData = { count: 1, startTime: now };
+    clientRequestCounts.set(clientIp, clientData);
+  } else {
+    clientData.count++;
+  }
+
+  if (clientData.count > RATE_LIMIT_MAX_REQUESTS) {
+    return res.status(429).json({
+      error: 'Too Many Requests',
+      message: 'Rate limit exceeded. Please retry in a few moments.'
+    });
+  }
+  next();
+});
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
