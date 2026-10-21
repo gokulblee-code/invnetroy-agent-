@@ -473,6 +473,24 @@ class POSBridge {
           in_transit_qty INTEGER DEFAULT 0,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
+
+        this.localOrdersDb.run(`CREATE TABLE IF NOT EXISTS vendor_chat_ledger (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id TEXT NOT NULL,
+          vendor_id TEXT NOT NULL,
+          vendor_name TEXT,
+          product_id TEXT NOT NULL,
+          product_name TEXT,
+          sender TEXT NOT NULL,
+          message TEXT NOT NULL,
+          turn_number INTEGER NOT NULL,
+          extracted_price REAL,
+          sentiment TEXT,
+          is_hallucination_blocked INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        this.localOrdersDb.run(`CREATE INDEX IF NOT EXISTS idx_vcl_vendor ON vendor_chat_ledger (vendor_id)`);
+        this.localOrdersDb.run(`CREATE INDEX IF NOT EXISTS idx_vcl_session ON vendor_chat_ledger (session_id)`);
       });
     } catch (e) {
       console.warn('Local orders db init warning:', e.message);
@@ -519,84 +537,140 @@ class POSBridge {
 
     return {
       success: true,
-      mode: dbExists ? 'DIRECT_SQLITE' : apiReachable ? 'HTTP_REST' : 'OFFLINE_FALLBACK',
+      mode: dbExists ? 'DIRECT_SQLITE' : apiReachable ? 'HTTP_REST' : 'STANDALONE',
       tenantId: this.tenantId,
       dbPath: this.dbPath,
       dbExists,
       dbConnected: Boolean(this.dbInstance),
       apiUrl: this.apiUrl,
       apiReachable,
-      apiStatus: apiMessage
+      apiStatus: apiMessage,
+      isPosEmpty: Boolean(this.isPosEmpty),
+      demoMode: process.env.DEMO_MODE === 'true'
     };
   }
 
+  /**
+   * 🔌 Universal POS Product Ingestion Engine with Dynamic Schema Auto-Discovery
+   * Detects arbitrary table names (products, items, inventory, catalog) and maps columns dynamically.
+   * If POS is connected but empty, adheres strictly to Zero-Mock Policy unless DEMO_MODE=true.
+   */
   async getProducts() {
-    // 1. Direct SQLite read if available
-    if (this.dbInstance) {
-      const rows = await new Promise((resolve) => {
-        const sql = `
-          SELECT p.*,
-                 COALESCE((
-                   SELECT SUM(quantity) FROM invoice_items ii 
-                   WHERE ii.product_id = p.id
-                 ), 0) as sales_7d
-          FROM products p
-          WHERE p.tenant_id = ? OR p.tenant_id IS NULL
-          ORDER BY p.name ASC
-        `;
-        this.dbInstance.all(sql, [this.tenantId], (err, resRows) => {
-          if (!err && resRows && resRows.length > 0) {
-            resolve(resRows);
-          } else {
-            resolve(null);
-          }
-        });
-      });
+    this.isPosEmpty = false;
 
-      if (rows && rows.length > 0) {
-        return rows.map(r => ({
-          id: r.id,
-          name: r.name,
-          category: r.category || 'Gardening',
-          price: Number(r.selling_price || r.price || 0),
-          cost: Number(r.cost_price || r.cost || 0),
-          stock: Number(r.stock || 0),
-          in_transit_stock: 0,
-          minStock: Number(r.min_stock_level || 15),
-          expiryDays: r.expiry_days != null ? Number(r.expiry_days) : 365,
-          sales7d: Math.max(Number(r.sales_7d || 0), r.id === 'p_snake_plant_10in' ? 56 : 14),
-          sku: r.sku || r.id,
-          brand: r.brand || 'Merlot Decor'
-        }));
+    // 1. Direct SQLite read if database connection is available
+    if (this.dbInstance) {
+      try {
+        const tables = await new Promise((resolve) => {
+          this.dbInstance.all(`SELECT name FROM sqlite_master WHERE type='table'`, [], (err, rows) => {
+            if (!err && rows) resolve(rows.map(r => r.name));
+            else resolve([]);
+          });
+        });
+
+        // Auto-detect product catalog table name
+        const catalogTable = ['products', 'items', 'inventory', 'catalog_items', 'stock_items']
+          .find(t => tables.includes(t));
+
+        if (catalogTable) {
+          const hasInvoiceItems = tables.includes('invoice_items');
+
+          const rawRows = await new Promise((resolve) => {
+            let sql = '';
+            if (hasInvoiceItems) {
+              sql = `
+                SELECT p.*,
+                       COALESCE((
+                         SELECT SUM(quantity) FROM invoice_items ii 
+                         WHERE ii.product_id = p.id
+                       ), 0) as sales_7d
+                FROM ${catalogTable} p
+                ORDER BY p.rowid ASC
+              `;
+            } else {
+              sql = `SELECT p.*, 0 as sales_7d FROM ${catalogTable} p ORDER BY p.rowid ASC`;
+            }
+
+            this.dbInstance.all(sql, [], (err, rows) => {
+              if (!err && rows) resolve(rows);
+              else resolve([]);
+            });
+          });
+
+          if (rawRows && rawRows.length > 0) {
+            this.isPosEmpty = false;
+            return rawRows.map((r, idx) => {
+              const sellingPrice = Number(r.selling_price || r.price || r.mrp || r.retail_price || r.unit_price || 0);
+              const costPrice = Number(r.cost_price || r.cost || r.purchase_rate || r.buy_price || r.base_cost || Math.round(sellingPrice * 0.5));
+              const currentStock = Number(r.stock != null ? r.stock : (r.current_stock != null ? r.current_stock : (r.quantity != null ? r.quantity : (r.qty_on_hand != null ? r.qty_on_hand : 0))));
+              const minStock = Number(r.min_stock_level || r.min_stock || r.reorder_point || r.rop || 15);
+              const expiryDays = r.expiry_days != null ? Number(r.expiry_days) : (r.shelf_life_days != null ? Number(r.shelf_life_days) : 365);
+              const sales7d = Number(r.sales_7d || r.sales7d || r.velocity_7d || 0);
+
+              return {
+                id: String(r.id || r.item_id || r.product_id || r.code || r.sku || `p_${idx + 1}`),
+                name: String(r.name || r.product_name || r.item_name || r.title || `Item #${idx + 1}`),
+                category: String(r.category || r.category_name || r.department || 'General'),
+                price: sellingPrice,
+                cost: costPrice,
+                stock: currentStock,
+                in_transit_stock: 0,
+                minStock,
+                expiryDays,
+                sales7d,
+                sku: String(r.sku || r.barcode || r.code || r.id || `SKU-${idx + 1}`),
+                brand: String(r.brand || r.brand_name || r.manufacturer || 'Store Product')
+              };
+            });
+          } else {
+            // Table exists in connected SQLite POS, but has 0 records (fresh/wiped client store)
+            this.isPosEmpty = true;
+            if (process.env.DEMO_MODE !== 'true') {
+              console.log('ℹ️ Connected POS database has 0 items. Zero-Mock Policy active (empty catalog returned).');
+              return [];
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('POS SQLite auto-schema read notice:', err.message);
       }
     }
 
-    // 2. HTTP REST read from POS
+    // 2. HTTP REST read from POS API if configured
     try {
-      const res = await fetch(`${this.apiUrl}/api/products?tenant_id=${this.tenantId}`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${this.apiUrl}/api/products`, { signal: controller.signal });
+      clearTimeout(timeout);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          return data.map(r => ({
-            id: r.id,
-            name: r.name,
-            category: r.category || 'Gardening',
+          this.isPosEmpty = false;
+          return data.map((r, idx) => ({
+            id: String(r.id || r.item_id || r.code || `p_${idx + 1}`),
+            name: String(r.name || r.product_name || r.title || `Item #${idx + 1}`),
+            category: String(r.category || 'General'),
             price: Number(r.price || r.selling_price || 0),
             cost: Number(r.cost || r.cost_price || 0),
-            stock: Number(r.stock || 0),
+            stock: Number(r.stock != null ? r.stock : (r.quantity != null ? r.quantity : 0)),
             in_transit_stock: 0,
             minStock: Number(r.minStock || r.min_stock_level || 15),
             expiryDays: Number(r.expiryDays || r.expiry_days || 365),
-            sales7d: Math.max(Number(r.sales7d || r.sales_7d || 0), r.id === 'p_snake_plant_10in' ? 56 : 14),
-            sku: r.sku || r.id,
-            brand: r.brand || 'Merlot Decor'
+            sales7d: Number(r.sales7d || r.sales_7d || 0),
+            sku: String(r.sku || r.id || `SKU-${idx + 1}`),
+            brand: String(r.brand || 'Store Product')
           }));
         }
       }
     } catch (e) {}
 
-    // 3. Guaranteed Merlot Home Decor & Gardening Catalog Fallback
-    return this.getFallbackMerlotCatalog();
+    // 3. Fallback logic: Only load mock nursery demo items if DEMO_MODE is explicitly enabled!
+    if (process.env.DEMO_MODE === 'true') {
+      return this.getFallbackMerlotCatalog();
+    }
+
+    // Zero-Mock Guarantee: Return empty array so client UI reflects actual store state cleanly
+    return [];
   }
 
   getFallbackMerlotCatalog() {
@@ -2357,6 +2431,105 @@ function cleanupExpiredWhatsAppSessions() {
 setInterval(cleanupExpiredWhatsAppSessions, 15 * 60 * 1000);
 
 /**
+ * 💾 Persistent Vendor Chat Ledger Storage
+ * Records every WhatsApp dialogue turn (inbound and outbound) persistently into SQLite.
+ */
+function recordVendorChatTurn({
+  sessionId,
+  vendorId,
+  vendorName,
+  productId,
+  productName,
+  sender,
+  message,
+  turnNumber,
+  extractedPrice,
+  sentiment,
+  isHallucinationBlocked = 0
+}) {
+  if (!posBridge || !posBridge.localOrdersDb) return;
+  try {
+    const stmt = posBridge.localOrdersDb.prepare(`
+      INSERT INTO vendor_chat_ledger (
+        session_id, vendor_id, vendor_name, product_id, product_name,
+        sender, message, turn_number, extracted_price, sentiment,
+        is_hallucination_blocked
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run([
+      sessionId || 'SESSION-DIRECT',
+      vendorId || 'UNKNOWN_VENDOR',
+      vendorName || 'Vendor',
+      productId || 'UNKNOWN_SKU',
+      productName || 'Product',
+      sender,
+      message,
+      turnNumber || 1,
+      extractedPrice || null,
+      sentiment || 'NEUTRAL',
+      isHallucinationBlocked ? 1 : 0
+    ], (err) => {
+      if (err) console.warn('Vendor chat ledger insert warning:', err.message);
+    });
+    stmt.finalize();
+  } catch (e) {
+    console.warn('Notice recording vendor chat ledger turn:', e.message);
+  }
+}
+
+/**
+ * 🔍 Query Historical Vendor Transcripts & Concession Records
+ */
+function getVendorChatHistory(vendorId, limit = 50) {
+  return new Promise((resolve) => {
+    if (!posBridge || !posBridge.localOrdersDb) return resolve([]);
+    posBridge.localOrdersDb.all(
+      `SELECT * FROM vendor_chat_ledger WHERE vendor_id = ? ORDER BY id DESC LIMIT ?`,
+      [vendorId, limit],
+      (err, rows) => {
+        if (!err && rows) {
+          resolve(rows.reverse());
+        } else {
+          resolve([]);
+        }
+      }
+    );
+  });
+}
+
+/**
+ * 🛡️ Zero-Hallucination Anti-Hallucination Firewall
+ * Deterministically audits generated text against price ceilings and factual limits.
+ */
+function verifyAndSanitizeNegotiationReply(draftText, { ceilingCost, currentOffer, lockedPrice, contactPerson }) {
+  if (!draftText || typeof draftText !== 'string') {
+    return {
+      isValid: false,
+      reason: 'EMPTY_TEXT',
+      sanitizedText: `Namaste ${contactPerson || 'Partner'}. Under our store procurement policy, our absolute ceiling cost is capped at ₹${lockedPrice || currentOffer}/unit with guaranteed instant corporate UPI clearance. Can you confirm at this unit rate?`
+    };
+  }
+
+  // Extract all numbers that appear to be prices
+  const priceMatches = draftText.match(/(?:₹|rs\.?|inr)?\s*(\d{2,5}(?:\.\d{1,2})?)/gi) || [];
+  const pricesFound = priceMatches.map(m => parseFloat(m.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n) && n > 20);
+
+  // Financial safety check: No quoted price can ever exceed the ceiling cost
+  for (const price of pricesFound) {
+    if (price > ceilingCost) {
+      console.warn(`🛡️ [Anti-Hallucination Guardrail Intercepted]: Draft contained price ₹${price} which exceeds ceiling limit ₹${ceilingCost}. Overriding.`);
+      return {
+        isValid: false,
+        reason: `PRICE_EXCEEDS_CEILING (₹${price} > ₹${ceilingCost})`,
+        sanitizedText: `Namaste ${contactPerson || 'Partner'}. We understand your operational constraints, but under our corporate procurement mandate, our absolute ceiling cost for this batch is strictly capped at ₹${lockedPrice || currentOffer}/unit with instant corporate UPI settlement. Can you meet us at ₹${lockedPrice || currentOffer}/unit?`
+      };
+    }
+  }
+
+  return { isValid: true, sanitizedText: draftText };
+}
+
+/**
  * Initiate an Autonomous WhatsApp Restock Session for a Low-Stock Product
  */
 function initiateAutoRestockForProduct(productId, productData, qty = 60) {
@@ -2416,6 +2589,20 @@ function initiateAutoRestockForProduct(productId, productData, qty = 60) {
     startedAt: new Date().toISOString(),
     lastActivity: Date.now()
   };
+
+  // Persistent Chat Ledger: Record opening tactical quote turn into database
+  recordVendorChatTurn({
+    sessionId,
+    vendorId: bestVendor.vendor_id,
+    vendorName: bestVendor.vendor_name,
+    productId,
+    productName: productData.name,
+    sender: 'AGENT',
+    message: openingMsg,
+    turnNumber: 1,
+    extractedPrice: initialOpeningRate,
+    sentiment: 'OPENING_QUOTE'
+  });
 
   ACTIVE_WHATSAPP_SESSIONS.set(sessionId, session);
   ACTIVE_WHATSAPP_SESSIONS.set(finalPhone, session);
@@ -2514,6 +2701,20 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
     message,
     timestamp: new Date().toLocaleTimeString(),
     priceDetected: vendorOfferedPrice
+  });
+
+  // Persistent Chat Ledger: Record incoming vendor dialogue turn into SQLite
+  recordVendorChatTurn({
+    sessionId: session.sessionId,
+    vendorId: vendor.vendor_id,
+    vendorName: vendor.vendor_name,
+    productId: session.productId,
+    productName: session.productName,
+    sender: 'VENDOR',
+    message,
+    turnNumber: session.turnCount,
+    extractedPrice: vendorOfferedPrice,
+    sentiment: hasNegation ? 'REJECTION_OR_COUNTER' : (isAcceptance ? 'ACCEPTANCE' : 'INQUIRY')
   });
 
   // Check if vendor explicitly rejected/declined to supply
@@ -2625,6 +2826,20 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
       finalPrice
     });
 
+    // Persistent Chat Ledger: Record verified deal settlement turn into SQLite
+    recordVendorChatTurn({
+      sessionId: session.sessionId,
+      vendorId: vendor.vendor_id,
+      vendorName: vendor.vendor_name,
+      productId: session.productId,
+      productName: session.productName,
+      sender: 'AGENT',
+      message: agentReply,
+      turnNumber: session.turnCount + 1,
+      extractedPrice: finalPrice,
+      sentiment: 'DEAL_CLOSED'
+    });
+
     const cleanVendorPhone = (vendor.whatsapp || normalizedPhone).replace(/[^0-9]/g, '');
     const waUrl = `https://api.whatsapp.com/send?phone=${cleanVendorPhone}&text=${encodeURIComponent(agentReply)}`;
 
@@ -2679,7 +2894,16 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
 
   const rawAgentReply = `Namaste ${vendor.contact_person}. We understand your operational constraints. However, under ${profile.firm_name}'s corporate procurement mandate, our absolute ceiling cost for this batch is capped at *₹${nextCounter}/unit* to maintain our store operating margin.\n\n` +
     `${vendorRelationshipPrompt}can you meet us at *₹${nextCounter}/unit* for immediate carrier dispatch?`;
-  const agentReply = scrubCompetitorLeaks(rawAgentReply, vendor.vendor_id);
+  const scrubbedReply = scrubCompetitorLeaks(rawAgentReply, vendor.vendor_id);
+
+  // 🛡️ Zero-Hallucination Firewall Audit: Verify price limits before dispatch
+  const auditResult = verifyAndSanitizeNegotiationReply(scrubbedReply, {
+    ceilingCost: session.ceilingCost,
+    currentOffer: nextCounter,
+    lockedPrice: nextCounter,
+    contactPerson: vendor.contact_person
+  });
+  const agentReply = auditResult.sanitizedText;
 
   session.turnCount++;
   session.dialogue.push({
@@ -2690,6 +2914,21 @@ async function handleIncomingWhatsAppReply({ from, message, sessionId = null, po
     counterOffered: nextCounter,
     tacticCitation: tactic,
     myblocksCitation: myblocksGuidance
+  });
+
+  // Persistent Chat Ledger: Record verified counter-offer turn into SQLite
+  recordVendorChatTurn({
+    sessionId: session.sessionId,
+    vendorId: vendor.vendor_id,
+    vendorName: vendor.vendor_name,
+    productId: session.productId,
+    productName: session.productName,
+    sender: 'AGENT',
+    message: agentReply,
+    turnNumber: session.turnCount,
+    extractedPrice: nextCounter,
+    sentiment: 'COUNTER_OFFER',
+    isHallucinationBlocked: auditResult.isValid ? 0 : 1
   });
 
   const cleanVendorPhone = (vendor.whatsapp || normalizedPhone).replace(/[^0-9]/g, '');
@@ -3673,12 +3912,41 @@ router.get(['/api/inventory-agent/analyze', '/api/inventory/analyze', '/analyze'
       const posProducts = await posBridge.getProducts();
       if (posProducts && posProducts.length > 0) {
         storeProducts = posProducts;
+      } else if (posBridge.isPosEmpty && process.env.DEMO_MODE !== 'true') {
+        storeProducts = [];
       }
     } catch (e) {}
 
+    const isDemoMode = process.env.DEMO_MODE === 'true';
     const catalogItems = (storeProducts && storeProducts.length > 0)
       ? storeProducts
-      : JSON.parse(JSON.stringify(DEFAULT_STORE_PRODUCTS));
+      : (isDemoMode ? JSON.parse(JSON.stringify(DEFAULT_STORE_PRODUCTS)) : []);
+
+    // Zero-Mock Guarantee: Return clear empty sync state if connected store has 0 products
+    if (catalogItems.length === 0) {
+      return res.json({
+        summary: {
+          total_skus: 0,
+          expiring_soon_count: 0,
+          reorder_needed_count: 0,
+          total_potential_savings: 0,
+          total_inventory_cost: 0,
+          total_inventory_retail: 0,
+          out_of_stock_count: 0
+        },
+        expiring_items: [],
+        reorder_recommendations: [],
+        analyzed_catalog: [],
+        is_pos_empty: true,
+        pos_status: await posBridge.getPosStatus(),
+        active_engine: {
+          mode: 'LIVE_POS_SYNC',
+          label: '🔌 Live POS Synchronization Mode (0 Products Detected)',
+          status: 'CONNECTED_EMPTY'
+        },
+        message: 'POS Connected: 0 items detected in database. Add items in your POS or import catalog CSV to activate autonomous monitoring.'
+      });
+    }
 
     const analyzedProducts = [];
     const expiringSoon = [];
@@ -4662,6 +4930,61 @@ router.get(['/api/inventory-agent/vendor-history/:vendorId', '/api/inventory/ven
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// 17e. GET /vendor-chat-ledger - Retrieve persistent historical chat dialogues & negotiation transcripts
+router.get(['/api/inventory-agent/vendor-chat-ledger', '/api/inventory/vendor-chat-ledger', '/vendor-chat-ledger'], async (req, res) => {
+  try {
+    const limit = Math.min(200, parseInt(req.query.limit, 10) || 50);
+    const rows = await new Promise((resolve) => {
+      if (!posBridge || !posBridge.localOrdersDb) return resolve([]);
+      posBridge.localOrdersDb.all(
+        `SELECT * FROM vendor_chat_ledger ORDER BY id DESC LIMIT ?`,
+        [limit],
+        (err, results) => {
+          if (!err && results) resolve(results);
+          else resolve([]);
+        }
+      );
+    });
+    res.json({
+      status: 'success',
+      count: rows.length,
+      turns: rows,
+      history: rows
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve vendor chat ledger: ' + err.message });
+  }
+});
+
+// 17f. GET /vendor-chat-ledger/:vendorId - Specific vendor chat transcript history
+router.get(['/api/inventory-agent/vendor-chat-ledger/:vendorId', '/api/inventory/vendor-chat-ledger/:vendorId', '/vendor-chat-ledger/:vendorId'], async (req, res) => {
+  try {
+    const vId = req.params.vendorId;
+    const limit = Math.min(100, parseInt(req.query.limit, 10) || 50);
+    const history = await getVendorChatHistory(vId, limit);
+    res.json({
+      status: 'success',
+      vendor_id: vId,
+      count: history.length,
+      history
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve vendor chat history: ' + err.message });
+  }
+});
+
+// 17g. GET /download-commercial-whitepaper - Download Executive Commercial Profitability & Financial Stability PDF
+router.get(['/api/inventory-agent/download-commercial-whitepaper', '/api/inventory/download-commercial-whitepaper', '/download-commercial-whitepaper'], (req, res) => {
+  const pdfPath = resolveAppPath('documents', 'Autonomous_Procurement_Commercial_Profitability_Report.pdf');
+  if (fs.existsSync(pdfPath)) {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="Autonomous_Procurement_Commercial_Profitability_Report.pdf"');
+    fs.createReadStream(pdfPath).pipe(res);
+  } else {
+    res.status(404).json({ error: 'Commercial report PDF is currently generating. Please retry in a few moments.' });
   }
 });
 
