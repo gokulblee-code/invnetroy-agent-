@@ -64,6 +64,9 @@ app.use(express.urlencoded({ extended: true }));
 // Mount the Merlot Inventory Replenishment & Vendor Sourcing Agent router
 app.use('/api/inventory-agent', inventoryRouter);
 app.use('/api/inventory', inventoryRouter);
+app.use('/api/workflow', inventoryRouter);
+app.use('/workflow', inventoryRouter);
+app.use('/api', inventoryRouter);
 
 // Serve the standalone HTML frontend SPA from frontend folder
 app.use(express.static(path.join(__dirname, 'frontend')));

@@ -5055,6 +5055,71 @@ router.post(['/api/inventory-agent/vendor-history', '/api/inventory/vendor-histo
 
 // ==================== 17h. Workflow Orchestration Engine (Switchable & Scalable) ====================
 
+// Developer Handover Guide Contract: GET /api/workflow/orchestration?company_id=...
+router.get(['/api/workflow/orchestration', '/workflow/orchestration', '/api/inventory-agent/orchestration-config'], requireAuth, (req, res) => {
+  try {
+    const requestedCompany = req.query.company_id || req.headers['x-company-id'] || 'tenant_merlot_01';
+    const authorizedCompany = req.headers['x-authorized-company-id'];
+
+    // Cross-tenant access guard: returns 403 Forbidden
+    if (authorizedCompany && authorizedCompany !== requestedCompany) {
+      return res.status(403).json({
+        error: `Forbidden: Cross-tenant access forbidden. Caller authorized for '${authorizedCompany}' cannot read orchestration config for '${requestedCompany}'.`,
+        requested_company: requestedCompany,
+        authorized_company: authorizedCompany
+      });
+    }
+
+    const config = workflowEngine.get_orchestration_config(requestedCompany);
+    res.json({
+      status: 'success',
+      company_id: requestedCompany,
+      config
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve company orchestration config: ' + err.message });
+  }
+});
+
+// Developer Handover Guide Contract: POST /api/workflow/orchestration
+// Body: { "company_id": "...", "updates": { ... } }
+router.post(['/api/workflow/orchestration', '/workflow/orchestration', '/api/inventory-agent/orchestration-config'], requireAuth, (req, res) => {
+  try {
+    const { company_id, updates } = req.body || {};
+    if (!company_id) {
+      return res.status(400).json({ error: 'Missing required field: company_id in request body.' });
+    }
+    if (!updates || typeof updates !== 'object') {
+      return res.status(400).json({ error: 'Missing or invalid updates object in request body.' });
+    }
+
+    const authorizedCompany = req.headers['x-authorized-company-id'];
+
+    // Cross-tenant access guard: returns 403 Forbidden
+    if (authorizedCompany && authorizedCompany !== company_id) {
+      return res.status(403).json({
+        error: `Forbidden: Cross-tenant access forbidden. Caller authorized for '${authorizedCompany}' cannot modify orchestration config for '${company_id}'.`,
+        requested_company: company_id,
+        authorized_company: authorizedCompany
+      });
+    }
+
+    const result = workflowEngine.set_orchestration_config(company_id, updates);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({
+      status: 'success',
+      message: result.message,
+      company_id,
+      config: result.config
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update company orchestration config: ' + err.message });
+  }
+});
+
 // GET /workflow-orchestration - Status, active profile, available profiles, configuration, recent executions
 router.get(['/api/inventory-agent/workflow-orchestration', '/api/inventory/workflow-orchestration', '/workflow-orchestration'], async (req, res) => {
   try {

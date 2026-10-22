@@ -12,21 +12,27 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 app.use('/api/inventory-agent', inventoryRouter);
+app.use('/api/workflow', inventoryRouter);
+app.use('/', inventoryRouter);
 
 // Lightweight in-process express invoker (0 network socket dependency)
 function invokeApp(method, url, headers = {}, body = null) {
   return new Promise((resolve) => {
     const req = new EventEmitter();
+    const parsedUrl = new URL(url, 'http://localhost');
     req.method = method.toUpperCase();
     req.url = url;
     req.originalUrl = url;
     req.headers = Object.fromEntries(
       Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v])
     );
-    req.query = {};
+    req.query = Object.fromEntries(parsedUrl.searchParams.entries());
     req.body = body;
     req.connection = { remoteAddress: '127.0.0.1' };
     req.ip = '127.0.0.1';
+    req.pipe = () => {};
+    req.unpipe = () => {};
+    req.resume = () => {};
 
     let resBody = '';
     const resHeaders = {};
@@ -245,7 +251,64 @@ async function runTests() {
   // Switch back to AUTONOMOUS_ACKERMAN
   inventoryRouter.workflowEngine.switchProfile('AUTONOMOUS_ACKERMAN');
 
-  console.log('🎉 ALL 15 TESTS PASSED SUCCESSFULLY! Workflow orchestration framework verified.');
+  // ==================== Developer Handover Guide Compliance Tests ====================
+  console.log('Test 16: Developer Handover Contract - GET /api/workflow/orchestration?company_id=...');
+  const res16 = await invokeApp('GET', '/api/workflow/orchestration?company_id=company_alpha', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  });
+  assert.strictEqual(res16.status, 200, `Expected 200, got ${res16.status}`);
+  assert.strictEqual(res16.body.company_id, 'company_alpha');
+  assert.ok(res16.body.config.active_workflow_id, 'Must return active_workflow_id');
+  console.log('  ✅ PASSED: Retrieved company_alpha orchestration config.\n');
+
+  console.log('Test 17: Developer Handover Contract - POST /api/workflow/orchestration updates policy & mode');
+  const res17 = await invokeApp('POST', '/api/workflow/orchestration', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, {
+    company_id: 'company_alpha',
+    updates: {
+      failure_policy: 'retry',
+      max_retries: 3,
+      orchestration_mode: 'planner',
+      active_workflow_id: 'HUMAN_APPROVAL_GATE'
+    }
+  });
+  assert.strictEqual(res17.status, 200, `Expected 200, got ${res17.status}`);
+  assert.strictEqual(res17.body.config.failure_policy, 'retry');
+  assert.strictEqual(res17.body.config.max_retries, 3);
+  assert.strictEqual(res17.body.config.active_workflow_id, 'HUMAN_APPROVAL_GATE');
+  console.log('  ✅ PASSED: Successfully updated failure_policy=retry, max_retries=3, and active_workflow_id.\n');
+
+  console.log('Test 18: Reject unknown workflow ID without silent fallback');
+  const res18 = await invokeApp('POST', '/api/workflow/orchestration', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, {
+    company_id: 'company_alpha',
+    updates: { active_workflow_id: 'NON_EXISTENT_WORKFLOW_ID' }
+  });
+  assert.strictEqual(res18.status, 400, 'Must reject unknown workflow ID with 400');
+  assert.ok(res18.body.error.includes('Unknown workflow ID'), 'Error must specify unknown workflow ID');
+  console.log('  ✅ PASSED: Unknown workflow ID rejected (no silent global fallback).\n');
+
+  console.log('Test 19: Reject out-of-range retries (>5) and invalid failure policy enum');
+  const res19 = await invokeApp('POST', '/api/workflow/orchestration', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, {
+    company_id: 'company_alpha',
+    updates: { max_retries: 99, failure_policy: 'invalid_enum' }
+  });
+  assert.strictEqual(res19.status, 400, 'Must reject invalid inputs with 400');
+  console.log('  ✅ PASSED: Invalid policy enum and out-of-range retries rejected.\n');
+
+  console.log('Test 20: Cross-tenant access guard returns 403 Forbidden');
+  const res20 = await invokeApp('GET', '/api/workflow/orchestration?company_id=unauthorized_competitor_corp', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026',
+    'X-Authorized-Company-Id': 'tenant_merlot_01'
+  });
+  assert.strictEqual(res20.status, 403, 'Must return 403 Forbidden on cross-tenant access attempt');
+  console.log('  ✅ PASSED: Cross-tenant unauthorized access blocked with 403 Forbidden.\n');
+
+  console.log('🎉 ALL 20 TESTS PASSED SUCCESSFULLY! Workflow orchestration handover specification fully verified.');
   process.exit(0);
 }
 

@@ -224,6 +224,121 @@ class WorkflowEngine extends EventEmitter {
   // Profile Switching & Configuration Management
   // -------------------------------------------------------------
 
+  /**
+   * Developer Handover Guide: get_orchestration_config(company_id)
+   * Resolves company-specific orchestration settings & active workflow
+   */
+  get_orchestration_config(companyId = 'tenant_merlot_01') {
+    const cid = String(companyId || 'tenant_merlot_01').trim();
+    const companies = this.config.companies || {};
+    const companyCfg = companies[cid] || {};
+
+    const activeWorkflowId = companyCfg.active_workflow_id || this.config.activeProfileId || 'AUTONOMOUS_ACKERMAN';
+    const profile = this.profiles[activeWorkflowId] || this.profiles.AUTONOMOUS_ACKERMAN;
+
+    return {
+      company_id: cid,
+      orchestration_mode: companyCfg.orchestration_mode || 'auto', // auto | planner | orchestrator | direct
+      failure_policy: companyCfg.failure_policy || 'continue',     // continue | stop | retry
+      max_retries: typeof companyCfg.max_retries === 'number' ? companyCfg.max_retries : 2, // 0-5
+      rag_enabled: companyCfg.rag_enabled !== undefined ? (companyCfg.rag_enabled ? 1 : 0) : (this.config.enableRagMemoryEnrichment ? 1 : 0),
+      reasoning_enabled: companyCfg.reasoning_enabled !== undefined ? (companyCfg.reasoning_enabled ? 1 : 0) : 1,
+      planner_enabled: companyCfg.planner_enabled !== undefined ? (companyCfg.planner_enabled ? 1 : 0) : 1,
+      active_workflow_id: activeWorkflowId,
+      active_workflow_label: profile ? profile.label : activeWorkflowId,
+      stages_count: profile && profile.stages ? profile.stages.length : 0,
+      updated_at: companyCfg.updated_at || this.config.updatedAt || new Date().toISOString()
+    };
+  }
+
+  /**
+   * Developer Handover Guide: set_orchestration_config(company_id, updates)
+   * Validates enum policies, max retries bounds (0-5), rejects unknown workflow IDs,
+   * and persists company-scoped configuration.
+   */
+  set_orchestration_config(companyId = 'tenant_merlot_01', updates = {}) {
+    const cid = String(companyId || '').trim();
+    if (!cid) {
+      return { success: false, error: 'company_id is required.' };
+    }
+
+    if (!this.config.companies) {
+      this.config.companies = {};
+    }
+
+    const current = this.get_orchestration_config(cid);
+    const patched = { ...current };
+
+    // 1. Validate failure_policy: continue | stop | retry
+    if (updates.failure_policy !== undefined) {
+      const allowed = ['continue', 'stop', 'retry'];
+      if (!allowed.includes(updates.failure_policy)) {
+        return { success: false, error: `Invalid failure_policy: '${updates.failure_policy}'. Must be one of: continue, stop, retry.` };
+      }
+      patched.failure_policy = updates.failure_policy;
+    }
+
+    // 2. Validate max_retries: 0 to 5
+    if (updates.max_retries !== undefined) {
+      const retries = parseInt(updates.max_retries, 10);
+      if (isNaN(retries) || retries < 0 || retries > 5) {
+        return { success: false, error: `Invalid max_retries: ${updates.max_retries}. Must be an integer between 0 and 5.` };
+      }
+      patched.max_retries = retries;
+    }
+
+    // 3. Validate orchestration_mode: auto | planner | orchestrator | direct
+    if (updates.orchestration_mode !== undefined) {
+      const allowedModes = ['auto', 'planner', 'orchestrator', 'direct'];
+      if (!allowedModes.includes(updates.orchestration_mode)) {
+        return { success: false, error: `Invalid orchestration_mode: '${updates.orchestration_mode}'. Must be one of: auto, planner, orchestrator, direct.` };
+      }
+      patched.orchestration_mode = updates.orchestration_mode;
+    }
+
+    // 4. Validate active_workflow_id (reject unknown workflow ID; no silent global fallback!)
+    if (updates.active_workflow_id !== undefined) {
+      const wId = String(updates.active_workflow_id).trim();
+      if (!this.profiles[wId]) {
+        return { 
+          success: false, 
+          error: `Unknown workflow ID: '${wId}'. No silent global fallback allowed. Registered workflows: ${Object.keys(this.profiles).join(', ')}.` 
+        };
+      }
+      patched.active_workflow_id = wId;
+      patched.active_workflow_label = this.profiles[wId].label;
+    }
+
+    // 5. Feature toggles (0 or 1)
+    if (updates.rag_enabled !== undefined) {
+      patched.rag_enabled = (updates.rag_enabled === 1 || updates.rag_enabled === true || updates.rag_enabled === '1') ? 1 : 0;
+    }
+    if (updates.reasoning_enabled !== undefined) {
+      patched.reasoning_enabled = (updates.reasoning_enabled === 1 || updates.reasoning_enabled === true || updates.reasoning_enabled === '1') ? 1 : 0;
+    }
+    if (updates.planner_enabled !== undefined) {
+      patched.planner_enabled = (updates.planner_enabled === 1 || updates.planner_enabled === true || updates.planner_enabled === '1') ? 1 : 0;
+    }
+
+    patched.updated_at = new Date().toISOString();
+    this.config.companies[cid] = patched;
+
+    // Synchronize default profile if active company
+    if (cid === 'tenant_merlot_01' || cid === this.config.activeCompanyId) {
+      this.config.activeProfileId = patched.active_workflow_id;
+    }
+
+    this.saveConfig({ companies: this.config.companies, activeProfileId: this.config.activeProfileId });
+    this.emit('company_config:updated', { companyId: cid, config: patched });
+
+    return {
+      success: true,
+      company_id: cid,
+      config: patched,
+      message: `Orchestration configuration for company '${cid}' updated successfully.`
+    };
+  }
+
   getActiveProfile() {
     const profileId = this.config.activeProfileId || 'AUTONOMOUS_ACKERMAN';
     return this.profiles[profileId] || this.profiles.AUTONOMOUS_ACKERMAN;
@@ -267,17 +382,25 @@ class WorkflowEngine extends EventEmitter {
   // -------------------------------------------------------------
 
   /**
-   * Enqueue a new replenishment workflow execution
+   * Enqueue a new replenishment workflow execution with Company / Tenant Scoping
    */
-  async startWorkflow({ productId, productName, initialQty = 60, productPrice = 499, trigger = 'WATCHDOG_AUTO' }) {
-    const activeProfile = this.getActiveProfile();
+  async startWorkflow({ companyId = 'tenant_merlot_01', productId, productName, initialQty = 60, productPrice = 499, trigger = 'WATCHDOG_AUTO' }) {
+    const companyCfg = this.get_orchestration_config(companyId);
+    const activeProfile = this.profiles[companyCfg.active_workflow_id] || this.getActiveProfile();
     const workflowId = `WF-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
     const execution = {
       workflowId,
+      companyId: companyId || 'tenant_merlot_01',
       profileId: activeProfile.id,
       profileName: activeProfile.label,
       profileMode: activeProfile.mode,
+      orchestrationSnapshot: {
+        orchestration_mode: companyCfg.orchestration_mode,
+        failure_policy: companyCfg.failure_policy,
+        max_retries: companyCfg.max_retries,
+        rag_enabled: companyCfg.rag_enabled
+      },
       productId,
       productName,
       initialQty,
@@ -380,17 +503,40 @@ class WorkflowEngine extends EventEmitter {
         return; // Pauses here; resumes when manager calls approveExecution()
       }
 
-      // Execute stage logic
-      const stageResult = await this.runStageLogic(stage.id, execution);
+      // Retrieve company failure policy
+      const companyCfg = this.get_orchestration_config(execution.companyId || 'tenant_merlot_01');
+      const failurePolicy = companyCfg.failure_policy || 'continue'; // continue | stop | retry
+      const maxRetries = companyCfg.max_retries || 2;
+
+      // Execute stage logic with retry policy if applicable
+      let stageResult = await this.runStageLogic(stage.id, execution);
+      let attempts = 1;
+
+      if (!stageResult.success && failurePolicy === 'retry') {
+        while (!stageResult.success && attempts <= maxRetries) {
+          attempts++;
+          stageResult = await this.runStageLogic(stage.id, execution);
+        }
+      }
+
       const durationMs = Date.now() - stageStart;
 
       execution.stagesExecuted.push({
         stageId: stage.id,
         label: stage.label,
-        status: stageResult.success ? 'COMPLETED' : 'WARNING',
+        status: stageResult.success ? 'COMPLETED' : (failurePolicy === 'stop' ? 'FAILED' : 'WARNING'),
+        attempts,
         durationMs,
         output: stageResult.message || 'Stage completed successfully'
       });
+
+      if (!stageResult.success && failurePolicy === 'stop') {
+        execution.status = 'STOPPED_ON_FAILURE';
+        execution.completedAt = new Date().toISOString();
+        await this.persistExecution(execution);
+        this.emit('workflow:stopped', { workflowId: execution.workflowId, failedStage: stage.id, error: stageResult.message });
+        return; // Stops here, later steps are skipped
+      }
 
       this.persistExecution(execution);
       this.emit('workflow:stage_completed', { workflowId: execution.workflowId, stage: stage.id, result: stageResult });
