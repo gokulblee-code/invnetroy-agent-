@@ -1409,13 +1409,21 @@
         </div>
         <div class="flex items-center space-x-2">
           <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="handleCsvFileUpload(event)" />
-          <button onclick="document.getElementById('csv-file-input').click()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs flex items-center space-x-1.5">
-            <i class="fa-solid fa-upload text-blue-600"></i>
+          <button onclick="document.getElementById('csv-file-input').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-upload"></i>
             <span>Upload New CSV</span>
           </button>
-          <button onclick="reloadVendorCsv()" class="bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs flex items-center space-x-1.5">
-            <i class="fa-solid fa-arrows-rotate"></i>
-            <span>Reload CSV</span>
+          <button onclick="reloadVendorCsv()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-arrows-rotate text-slate-500"></i>
+            <span>Reload</span>
+          </button>
+          <button onclick="clearVendorCsv()" class="bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs flex items-center space-x-1.5 transition" title="Clear all sample suppliers to start with a blank directory">
+            <i class="fa-solid fa-trash-can text-rose-600"></i>
+            <span>Clear Directory</span>
+          </button>
+          <button onclick="restoreSampleVendorCsv()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs flex items-center space-x-1.5 transition" title="Restore sample nursery suppliers">
+            <i class="fa-solid fa-rotate-left text-slate-500"></i>
+            <span>Load Sample Data</span>
           </button>
         </div>
       </div>
@@ -3744,7 +3752,21 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
           if (dropVendorCount) dropVendorCount.innerText = `${vendors.length} Active`;
 
           if (vendors.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">No vendors found in vendors.csv.</td></tr>';
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="6" class="p-8 text-center text-slate-500">
+                  <div class="text-3xl mb-2">📋</div>
+                  <div class="font-bold text-slate-800 text-sm">Wholesale Vendor Directory is Empty (0 Vendors)</div>
+                  <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-3">
+                    No suppliers are loaded. Click <b>"Upload New CSV"</b> above to import your client supplier quotes and contacts, or click <b>"Load Sample Data"</b> to restore demo suppliers.
+                  </p>
+                  <button onclick="document.getElementById('csv-file-input').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition shadow-xs inline-flex items-center space-x-1">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Supplier CSV</span>
+                  </button>
+                </td>
+              </tr>
+            `;
             return;
           }
 
@@ -3894,6 +3916,45 @@ POS_DB_PATH=${document.getElementById('ent-pos-path').value || 'C:/Users/asus/Do
         }
       };
       reader.readAsText(file);
+    }
+
+    async function clearVendorCsv() {
+      if (!confirm('Are you sure you want to clear all suppliers? This will empty the vendors.csv directory so you can import a fresh client supplier list.')) return;
+      try {
+        const res = await fetch('/api/inventory-agent/clear-vendors-csv', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ ' + (data.message || 'Vendor directory cleared successfully.'));
+          await loadVendorCsvTable();
+          fetchAnalysisData();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to clear vendors.'));
+        }
+      } catch (err) {
+        alert('Network error clearing vendors: ' + err.message);
+      }
+    }
+
+    async function restoreSampleVendorCsv() {
+      try {
+        const res = await fetch('/api/inventory-agent/restore-sample-vendors-csv', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ ' + (data.message || 'Sample nursery vendors restored.'));
+          await loadVendorCsvTable();
+          fetchAnalysisData();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to restore sample vendors.'));
+        }
+      } catch (err) {
+        alert('Network error restoring sample vendors: ' + err.message);
+      }
     }
 
     // ==================== Playbooks & Books RAG Handlers ====================

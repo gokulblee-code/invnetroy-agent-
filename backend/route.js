@@ -3063,12 +3063,17 @@ class AutoWatchdog {
       }
 
       if (!storeProducts || storeProducts.length === 0) {
-        storeProducts = [
-          { id: 'p_snake_plant_10in', name: 'Snake Plant (Sansevieria Laurentii)', stock: 8, min_stock: 20, price: 499 },
-          { id: 'p_fiddle_leaf_fig', name: 'Fiddle Leaf Fig Premium (Ficus Lyrata)', stock: 5, min_stock: 15, price: 1499 },
-          { id: 'p_monstera_deliciosa', name: 'Monstera Deliciosa Swiss Cheese', stock: 12, min_stock: 25, price: 799 },
-          { id: 'p_neem_oil_500ml', name: 'Organic Cold-Pressed Neem Oil Spray (500ml)', stock: 15, min_stock: 20, price: 299 }
-        ];
+        if (process.env.DEMO_MODE === 'true') {
+          storeProducts = [
+            { id: 'p_snake_plant_10in', name: 'Snake Plant (Sansevieria Laurentii)', stock: 8, min_stock: 20, price: 499 },
+            { id: 'p_fiddle_leaf_fig', name: 'Fiddle Leaf Fig Premium (Ficus Lyrata)', stock: 5, min_stock: 15, price: 1499 },
+            { id: 'p_monstera_deliciosa', name: 'Monstera Deliciosa Swiss Cheese', stock: 12, min_stock: 25, price: 799 },
+            { id: 'p_neem_oil_500ml', name: 'Organic Cold-Pressed Neem Oil Spray (500ml)', stock: 15, min_stock: 20, price: 299 }
+          ];
+        } else {
+          console.log('ℹ️ [AutoWatchdog] POS catalog has 0 items. Zero-Mock Policy active. Standing by.');
+          return;
+        }
       }
 
       // Merge custom monitored items from store profile
@@ -4898,6 +4903,47 @@ router.post(['/api/inventory-agent/import-vendors-csv', '/api/inventory/import-v
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to import vendors CSV: ' + err.message });
+  }
+});
+
+// 17b. POST /clear-vendors-csv - Clear vendor directory to blank template
+router.post(['/api/inventory-agent/clear-vendors-csv', '/api/inventory/clear-vendors-csv', '/clear-vendors-csv'], requireAuth, (req, res) => {
+  try {
+    const csvPath = resolveAppPath('vendors.csv');
+    const headerOnly = 'vendor_id,vendor_name,contact_person,phone,whatsapp,location,products_supplied,base_cost,floor_price,lead_time_days,moq,rating,upi_id,bank_account,ifsc\n';
+    fs.writeFileSync(csvPath, headerOnly, 'utf8');
+    ragProcurement.RAG_KNOWLEDGE_STORE.allVendors = [];
+    ragProcurement.RAG_KNOWLEDGE_STORE.vendorDirectory = {};
+    res.json({
+      status: 'success',
+      message: 'Vendor directory cleared. You can now upload your custom vendor CSV.',
+      count: 0,
+      vendors: []
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear vendors: ' + err.message });
+  }
+});
+
+// 17c. POST /restore-sample-vendors-csv - Restore default sample nursery vendors
+router.post(['/api/inventory-agent/restore-sample-vendors-csv', '/api/inventory/restore-sample-vendors-csv', '/restore-sample-vendors-csv'], requireAuth, (req, res) => {
+  try {
+    const csvPath = resolveAppPath('vendors.csv');
+    const examplePath = resolveAppPath('vendors.example.csv');
+    if (fs.existsSync(examplePath)) {
+      const sampleContent = fs.readFileSync(examplePath, 'utf8');
+      fs.writeFileSync(csvPath, sampleContent, 'utf8');
+      const loadResult = ragProcurement.loadVendorsFromCSV(csvPath);
+      return res.json({
+        status: 'success',
+        message: `Restored ${loadResult.count} sample nursery vendors.`,
+        count: loadResult.count,
+        vendors: loadResult.vendors
+      });
+    }
+    res.status(404).json({ error: 'Sample vendors file (vendors.example.csv) not found.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to restore sample vendors: ' + err.message });
   }
 });
 
