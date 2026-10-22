@@ -182,7 +182,70 @@ async function runTests() {
     console.log(`  ✅ PASSED: Active POS catalog contains ${res11.body.summary.total_skus} live SKUs from database.\n`);
   }
 
-  console.log('🎉 ALL 11 TESTS PASSED SUCCESSFULLY! All remediations & enhancements verified.');
+  // TEST 12: Workflow Orchestration Engine Status & Switchable Profiles
+  console.log('Test 12: GET /workflow-orchestration retrieves switchable profiles & queue stats');
+  const res12 = await invokeApp('GET', '/api/inventory-agent/workflow-orchestration');
+  assert.strictEqual(res12.status, 200, `Expected 200, got ${res12.status}`);
+  assert.ok(res12.body.availableProfiles.length >= 5, 'Must have at least 5 switchable workflow profiles');
+  assert.ok(typeof res12.body.maxConcurrentWorkflows === 'number', 'Must specify queue concurrency limit');
+  console.log(`  ✅ PASSED: ${res12.body.availableProfiles.length} switchable workflow profiles loaded with concurrency scaling (${res12.body.maxConcurrentWorkflows} max jobs).\n`);
+
+  // TEST 13: Switch Workflow Profile
+  console.log('Test 13: POST /workflow-orchestration/switch-profile switches to HUMAN_APPROVAL_GATE');
+  const res13 = await invokeApp('POST', '/api/inventory-agent/workflow-orchestration/switch-profile', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, { profile_id: 'HUMAN_APPROVAL_GATE' });
+  assert.strictEqual(res13.status, 200, `Expected 200, got ${res13.status}`);
+  assert.strictEqual(res13.body.activeProfile.id, 'HUMAN_APPROVAL_GATE');
+  console.log('  ✅ PASSED: Switched active workflow orchestration strategy to Human-in-the-Loop.\n');
+
+  // TEST 14: Edit Workflow Configuration Limits
+  console.log('Test 14: POST /workflow-orchestration/config edits policy thresholds & scaling knobs');
+  const res14 = await invokeApp('POST', '/api/inventory-agent/workflow-orchestration/config', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, {
+    autoApprovalLimitInr: 30000,
+    maxConcurrentWorkflows: 50,
+    maxNegotiationRounds: 4
+  });
+  assert.strictEqual(res14.status, 200, `Expected 200, got ${res14.status}`);
+  assert.strictEqual(res14.body.config.autoApprovalLimitInr, 30000);
+  assert.strictEqual(res14.body.config.maxConcurrentWorkflows, 50);
+  console.log('  ✅ PASSED: Workflow configuration thresholds successfully edited and persisted.\n');
+
+  // TEST 15: Trigger Workflow and Human Approval Resolution
+  console.log('Test 15: Trigger workflow execution with state machine persistence and approval resolution');
+  const res15 = await invokeApp('POST', '/api/inventory-agent/workflow-orchestration/trigger', {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, {
+    product_id: 'p_snake_plant_10in',
+    product_name: 'Snake Plant',
+    quantity: 20,
+    price: 499
+  });
+  assert.strictEqual(res15.status, 200, `Expected 200, got ${res15.status}`);
+  const wfId = res15.body.execution.workflowId;
+
+  // Allow pipeline to progress to approval gate
+  await new Promise(r => setTimeout(r, 400));
+  const wfCheck = await inventoryRouter.workflowEngine.getExecution(wfId);
+  assert.strictEqual(wfCheck.status, 'AWAITING_HUMAN_APPROVAL', 'Should pause at human gate');
+
+  // Manager approves workflow
+  const res15Approve = await invokeApp('POST', `/api/inventory-agent/workflow-orchestration/executions/${wfId}/approve`, {
+    'X-Agent-Key': 'merlot_secure_agent_key_2026'
+  }, { manager_name: 'Auditor Test' });
+  assert.strictEqual(res15Approve.status, 200, `Expected 200, got ${res15Approve.status}`);
+
+  // Confirm state completed in SQLite
+  const wfFinal = await inventoryRouter.workflowEngine.getExecution(wfId);
+  assert.strictEqual(wfFinal.status, 'COMPLETED', 'Should transition to COMPLETED upon human approval');
+  console.log(`  ✅ PASSED: Workflow ${wfId} paused for human gate and completed upon manager approval.\n`);
+
+  // Switch back to AUTONOMOUS_ACKERMAN
+  inventoryRouter.workflowEngine.switchProfile('AUTONOMOUS_ACKERMAN');
+
+  console.log('🎉 ALL 15 TESTS PASSED SUCCESSFULLY! Workflow orchestration framework verified.');
   process.exit(0);
 }
 

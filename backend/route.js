@@ -17,6 +17,7 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
+const { workflowEngine } = require('./workflowEngine');
 
 // Safe database resolution (Optional - never crashes if missing)
 let db = null;
@@ -4027,6 +4028,7 @@ router.get(['/api/inventory-agent/analyze', '/api/inventory/analyze', '/analyze'
     res.json({
       status: 'success',
       active_engine: activeEngine,
+      workflow_orchestration: workflowEngine.getStatus(),
       timestamp: new Date().toLocaleString('en-IN'),
       summary: {
         total_skus: catalogItems.length,
@@ -5051,6 +5053,130 @@ router.post(['/api/inventory-agent/vendor-history', '/api/inventory/vendor-histo
   }
 });
 
+// ==================== 17h. Workflow Orchestration Engine (Switchable & Scalable) ====================
+
+// GET /workflow-orchestration - Status, active profile, available profiles, configuration, recent executions
+router.get(['/api/inventory-agent/workflow-orchestration', '/api/inventory/workflow-orchestration', '/workflow-orchestration'], async (req, res) => {
+  try {
+    const status = workflowEngine.getStatus();
+    const limit = Math.min(50, parseInt(req.query.limit, 10) || 15);
+    const executions = await workflowEngine.getRecentExecutions(limit);
+    res.json({
+      status: 'success',
+      ...status,
+      recentExecutions: executions
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve workflow status: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/switch-profile - Switch active profile
+router.post(['/api/inventory-agent/workflow-orchestration/switch-profile', '/api/inventory/workflow-orchestration/switch-profile', '/workflow-orchestration/switch-profile'], requireAuth, (req, res) => {
+  try {
+    const { profile_id } = req.body || {};
+    if (!profile_id) return res.status(400).json({ error: 'Missing profile_id in request body.' });
+    const result = workflowEngine.switchProfile(profile_id);
+    if (!result.success) return res.status(400).json({ error: result.error });
+    res.json({ status: 'success', ...result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to switch profile: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/config - Edit pipeline parameters (thresholds, timeouts, concurrency)
+router.post(['/api/inventory-agent/workflow-orchestration/config', '/api/inventory/workflow-orchestration/config', '/workflow-orchestration/config'], requireAuth, (req, res) => {
+  try {
+    const updates = req.body || {};
+    const result = workflowEngine.saveConfig(updates);
+    if (!result.success) return res.status(400).json({ error: result.error });
+    res.json({ status: 'success', message: 'Workflow orchestration configuration updated successfully.', config: result.config });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update workflow config: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/stages - Edit custom pipeline stages
+router.post(['/api/inventory-agent/workflow-orchestration/stages', '/api/inventory/workflow-orchestration/stages', '/workflow-orchestration/stages'], requireAuth, (req, res) => {
+  try {
+    const { stages } = req.body || {};
+    if (!Array.isArray(stages)) return res.status(400).json({ error: 'Expected stages array in request body.' });
+    const result = workflowEngine.updateCustomPipelineStages(stages);
+    if (!result.success) return res.status(400).json({ error: result.error });
+    res.json({ status: 'success', message: 'Custom pipeline stages updated successfully.', stages: result.stages });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update custom pipeline stages: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/reset - Restore factory default profiles and configuration
+router.post(['/api/inventory-agent/workflow-orchestration/reset', '/api/inventory/workflow-orchestration/reset', '/workflow-orchestration/reset'], requireAuth, (req, res) => {
+  try {
+    const result = workflowEngine.resetToDefaults();
+    res.json({ status: 'success', ...result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to reset workflow config: ' + err.message });
+  }
+});
+
+// GET /workflow-orchestration/executions - Query recent workflow executions
+router.get(['/api/inventory-agent/workflow-orchestration/executions', '/api/inventory/workflow-orchestration/executions', '/workflow-orchestration/executions'], async (req, res) => {
+  try {
+    const limit = Math.min(100, parseInt(req.query.limit, 10) || 20);
+    const executions = await workflowEngine.getRecentExecutions(limit);
+    res.json({ status: 'success', count: executions.length, executions });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load workflow executions: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/executions/:id/approve - Human Manager Approval
+router.post(['/api/inventory-agent/workflow-orchestration/executions/:id/approve', '/api/inventory/workflow-orchestration/executions/:id/approve', '/workflow-orchestration/executions/:id/approve'], requireAuth, async (req, res) => {
+  try {
+    const workflowId = req.params.id;
+    const { manager_name } = req.body || {};
+    const result = await workflowEngine.approveExecution(workflowId, manager_name || 'Store Manager');
+    if (!result.success) return res.status(400).json({ error: result.error });
+    res.json({ status: 'success', ...result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to approve workflow: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/executions/:id/reject - Human Manager Rejection
+router.post(['/api/inventory-agent/workflow-orchestration/executions/:id/reject', '/api/inventory/workflow-orchestration/executions/:id/reject', '/workflow-orchestration/executions/:id/reject'], requireAuth, async (req, res) => {
+  try {
+    const workflowId = req.params.id;
+    const { reason } = req.body || {};
+    const result = await workflowEngine.rejectExecution(workflowId, reason || 'Rejected by operator');
+    if (!result.success) return res.status(400).json({ error: result.error });
+    res.json({ status: 'success', ...result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to reject workflow: ' + err.message });
+  }
+});
+
+// POST /workflow-orchestration/trigger - Manually trigger an orchestrated workflow run
+router.post(['/api/inventory-agent/workflow-orchestration/trigger', '/api/inventory/workflow-orchestration/trigger', '/workflow-orchestration/trigger'], requireAuth, async (req, res) => {
+  try {
+    const { product_id, product_name, quantity, price } = req.body || {};
+    const execution = await workflowEngine.startWorkflow({
+      productId: product_id || 'p_manual',
+      productName: product_name || 'Manual Restock Item',
+      initialQty: parseInt(quantity, 10) || 30,
+      productPrice: parseFloat(price) || 299.0,
+      trigger: 'MANUAL_DASHBOARD_TRIGGER'
+    });
+    res.json({
+      status: 'success',
+      message: `Workflow ${execution.workflowId} queued using active profile "${execution.profileName}".`,
+      execution
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to trigger workflow: ' + err.message });
+  }
+});
+
 // 18. GET /playbooks - List all uploaded negotiation books & active selection
 router.get(['/api/inventory-agent/playbooks', '/api/inventory/playbooks', '/playbooks'], (req, res) => {
   try {
@@ -5522,5 +5648,6 @@ router.autoWatchdog = autoWatchdog;
 router.whatsappService = whatsappService;
 router.ragProcurement = ragProcurement;
 router.playbookEngine = playbookEngine;
+router.workflowEngine = workflowEngine;
 
 module.exports = router;

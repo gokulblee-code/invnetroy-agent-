@@ -1,0 +1,16 @@
+{
+  "version": "2.2.0",
+  "activeProfileId": "AUTONOMOUS_ACKERMAN",
+  "autoApprovalLimitInr": 30000,
+  "maxNegotiationRounds": 4,
+  "targetDiscountPct": 15,
+  "maxConcurrentWorkflows": 50,
+  "timeoutSecondsPerStage": 30,
+  "enableFefoClearance": true,
+  "enableRagMemoryEnrichment": true,
+  "enableCeilingFirewall": true,
+  "enableAutoUpiGeneration": true,
+  "enableAutoPoDispatch": true,
+  "requireHumanSignOffAboveLimit": true,
+  "updatedAt": "2026-10-22T03:58:47.088Z"
+}
