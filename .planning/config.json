@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "mode": "interactive",
+  "workflow": "autonomous-ackerman",
+  "antiSpam": {
+    "dedupWindowMinutes": 15,
+    "throttleSeconds": 8,
+    "cooldownHours": 12
+  },
+  "ai": {
+    "provider": "gemini",
+    "model": "gemini-3.5-flash",
+    "reasoningEnabled": true
+  }
+}

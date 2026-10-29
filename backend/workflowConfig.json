@@ -12,5 +12,20 @@
   "enableAutoUpiGeneration": true,
   "enableAutoPoDispatch": true,
   "requireHumanSignOffAboveLimit": true,
-  "updatedAt": "2026-10-22T04:08:17.367Z"
+  "updatedAt": "2026-10-28T05:57:44.876Z",
+  "companies": {
+    "company_alpha": {
+      "company_id": "company_alpha",
+      "orchestration_mode": "planner",
+      "failure_policy": "retry",
+      "max_retries": 3,
+      "rag_enabled": 1,
+      "reasoning_enabled": 1,
+      "planner_enabled": 1,
+      "active_workflow_id": "HUMAN_APPROVAL_GATE",
+      "active_workflow_label": "🛡️ Human-in-the-Loop Approval Gate",
+      "stages_count": 10,
+      "updated_at": "2026-10-28T05:57:44.876Z"
+    }
+  }
 }

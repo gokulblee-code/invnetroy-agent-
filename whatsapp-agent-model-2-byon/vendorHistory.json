@@ -1,0 +1,882 @@
+{
+  "v_deccan": {
+    "vendor_id": "v_deccan",
+    "vendor_name": "Deccan Flora Wholesale Nursery",
+    "total_orders_completed": 23,
+    "cumulative_spend": 322200,
+    "avg_discount_achieved_pct": 29.4,
+    "fulfillment_reliability_score": 98.5,
+    "negotiation_behavior_profile": "High flexibility on volume batches; concedes readily when offered guaranteed instant Corporate UPI settlement.",
+    "deal_archive": [
+      {
+        "po_number": "PO-MERLOT-209531",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-071584",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-161091",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-572689",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-478716",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-644182",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-446302",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-096857",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-526565",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-488005",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-400065",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-816916",
+        "date": "2026-10-22",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-043806",
+        "date": "2026-10-21",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-980459",
+        "date": "2026-10-21",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-931029",
+        "date": "2026-10-21",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-673351",
+        "date": "2026-10-21",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-368929",
+        "date": "2026-10-21",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-996949",
+        "date": "2026-10-21",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-063604",
+        "date": "2026-10-20",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-044678",
+        "date": "2026-10-20",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 237,
+        "discount_pct": 30.3,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-2026-041",
+        "date": "2026-08-15",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 340,
+        "cleared_unit_price": 270,
+        "discount_pct": 20.6,
+        "notes": "Clean root system, 100% survival rate, delivered in 24 hours."
+      },
+      {
+        "po_number": "PO-MERLOT-2026-074",
+        "date": "2026-09-18",
+        "product_id": "p_monstera_deliciosa",
+        "product_name": "Monstera Deliciosa (Swiss Cheese Plant)",
+        "quantity": 30,
+        "opening_quote": 410,
+        "cleared_unit_price": 330,
+        "discount_pct": 19.5,
+        "notes": "Premium fenestrated leaves, delivered in 24 hours via regional mandi dispatch."
+      }
+    ]
+  },
+  "v_greencanopy": {
+    "vendor_id": "v_greencanopy",
+    "vendor_name": "Green Canopy Growers",
+    "total_orders_completed": 2,
+    "cumulative_spend": 42800,
+    "avg_discount_achieved_pct": 12,
+    "fulfillment_reliability_score": 95,
+    "negotiation_behavior_profile": "Stands firm on initial quote in Turn 1, but concessions open up in Turn 2 when committed to 40+ units.",
+    "deal_archive": [
+      {
+        "po_number": "PO-MERLOT-2026-062",
+        "date": "2026-09-02",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 40,
+        "opening_quote": 320,
+        "cleared_unit_price": 285,
+        "discount_pct": 10.9,
+        "notes": "Delivered in 48 hours. Healthy leaves, minor tip damage replaced on next batch."
+      }
+    ]
+  },
+  "v_biogreens": {
+    "vendor_id": "v_biogreens",
+    "vendor_name": "BioGreens Botanical Nursery",
+    "total_orders_completed": 1,
+    "cumulative_spend": 18500,
+    "avg_discount_achieved_pct": 14.2,
+    "fulfillment_reliability_score": 94,
+    "negotiation_behavior_profile": "Reliable South India nursery supplier; strict MOQ of 50 units for discount tier.",
+    "deal_archive": [
+      {
+        "po_number": "PO-MERLOT-2026-055",
+        "date": "2026-08-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 310,
+        "cleared_unit_price": 265,
+        "discount_pct": 14.5,
+        "notes": "Good packaging, 4-day transit lead time."
+      }
+    ]
+  },
+  "v_ceramics_craft": {
+    "vendor_id": "v_ceramics_craft",
+    "vendor_name": "Heritage Ceramic Crafts",
+    "total_orders_completed": 5,
+    "cumulative_spend": 42200,
+    "avg_discount_achieved_pct": 17.2,
+    "fulfillment_reliability_score": 99,
+    "negotiation_behavior_profile": "Excellent pottery artisan hub; high quality terracotta with 0 breakage in transit.",
+    "deal_archive": [
+      {
+        "po_number": "PO-MERLOT-466780",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 145,
+        "cleared_unit_price": 250,
+        "discount_pct": 0,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-447757",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 145,
+        "cleared_unit_price": 190,
+        "discount_pct": 0,
+        "notes": "Deal closed via WhatsApp in 5 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-367556",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 145,
+        "cleared_unit_price": 150,
+        "discount_pct": 0,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-2026-039",
+        "date": "2026-08-10",
+        "product_id": "p_ceramic_pot_10in",
+        "product_name": "High-Fire Glazed Ceramic Planter (10-inch)",
+        "quantity": 50,
+        "opening_quote": 145,
+        "cleared_unit_price": 120,
+        "discount_pct": 17.2,
+        "notes": "Bubble-wrapped, drainage hole verified."
+      }
+    ]
+  },
+  "v_bio_agro": {
+    "vendor_id": "v_bio_agro",
+    "vendor_name": "BioAgro Organics India",
+    "total_orders_completed": 2,
+    "cumulative_spend": 15400,
+    "avg_discount_achieved_pct": 17.4,
+    "fulfillment_reliability_score": 99.5,
+    "negotiation_behavior_profile": "Consistent pharmaceutical-grade organic formulations; accepts 24-hr instant UPI settlement.",
+    "deal_archive": [
+      {
+        "po_number": "PO-MERLOT-2026-048",
+        "date": "2026-08-20",
+        "product_id": "p_organic_neem_oil",
+        "product_name": "Organic Cold-Pressed Neem Oil Spray (500ml)",
+        "quantity": 40,
+        "opening_quote": 115,
+        "cleared_unit_price": 95,
+        "discount_pct": 17.4,
+        "notes": "Batch manufacturing date < 15 days, tamper-evident seals verified."
+      }
+    ]
+  },
+  "v_gokul": {
+    "vendor_id": "v_gokul",
+    "vendor_name": "Gokul Botanical Wholesale",
+    "total_orders_completed": 45,
+    "cumulative_spend": 541500,
+    "avg_discount_achieved_pct": 8.4,
+    "fulfillment_reliability_score": 95,
+    "negotiation_behavior_profile": "Active commercial partner with proven delivery track record.",
+    "deal_archive": [
+      {
+        "po_number": "PO-MERLOT-064343",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-429616",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-417215",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 280,
+        "discount_pct": 12.5,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-600322",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-106340",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 20,
+        "opening_quote": 320,
+        "cleared_unit_price": 296,
+        "discount_pct": 7.5,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-027263",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 20,
+        "opening_quote": 320,
+        "cleared_unit_price": 296,
+        "discount_pct": 7.5,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-769395",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-445497",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-323310",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-059428",
+        "date": "2026-10-28",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 296,
+        "discount_pct": 7.5,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-386913",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-633501",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-618540",
+        "date": "2026-10-28",
+        "product_id": "m1",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 279,
+        "discount_pct": 12.8,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-507005",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-497652",
+        "date": "2026-10-28",
+        "product_id": "m1",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 279,
+        "discount_pct": 12.8,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-209830",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-632866",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-051209",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-139869",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-539337",
+        "date": "2026-10-28",
+        "product_id": "m1",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 279,
+        "discount_pct": 12.8,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-492605",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-259586",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-826178",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-807317",
+        "date": "2026-10-28",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 294,
+        "discount_pct": 8.1,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-787091",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 20,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 5 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-718320",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-959534",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 15,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-946100",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 15,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 5 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-931682",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 15,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 4 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-419327",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 25,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 3 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-887843",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 15,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-806595",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 299,
+        "discount_pct": 6.6,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-693253",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 299,
+        "discount_pct": 6.6,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-198775",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 290,
+        "discount_pct": 9.4,
+        "notes": "Deal closed via WhatsApp in 3 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-932506",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 300,
+        "discount_pct": 6.3,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-871904",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 299,
+        "discount_pct": 6.6,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-685749",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 310,
+        "discount_pct": 3.1,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-335619",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 60,
+        "opening_quote": 320,
+        "cleared_unit_price": 310,
+        "discount_pct": 3.1,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-563357",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 310,
+        "discount_pct": 3.1,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-397208",
+        "date": "2026-10-27",
+        "product_id": "p_snake_plant_10in",
+        "product_name": "Snake Plant (Sansevieria Laurentii)",
+        "quantity": 50,
+        "opening_quote": 320,
+        "cleared_unit_price": 299,
+        "discount_pct": 6.6,
+        "notes": "Deal closed via WhatsApp in 6 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-947228",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 300,
+        "discount_pct": 6.3,
+        "notes": "Deal closed via WhatsApp in 4 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-380327",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 296,
+        "discount_pct": 7.5,
+        "notes": "Deal closed via WhatsApp in 4 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-152719",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 30,
+        "opening_quote": 320,
+        "cleared_unit_price": 300,
+        "discount_pct": 6.3,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-588334",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 60,
+        "opening_quote": 320,
+        "cleared_unit_price": 300,
+        "discount_pct": 6.3,
+        "notes": "Deal closed via WhatsApp in 2 turn(s) with instant UPI settlement."
+      },
+      {
+        "po_number": "PO-MERLOT-637705",
+        "date": "2026-10-27",
+        "product_id": "m1",
+        "product_name": "Snake Plant in Ceramic Pot",
+        "quantity": 60,
+        "opening_quote": 320,
+        "cleared_unit_price": 245,
+        "discount_pct": 23.4,
+        "notes": "Deal closed via WhatsApp in 4 turn(s) with instant UPI settlement."
+      }
+    ]
+  }
+}

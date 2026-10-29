@@ -1,0 +1,26 @@
+{
+  "name": "whatsapp-agent-mcp-server",
+  "version": "1.0.0",
+  "description": "Portable Model Context Protocol (MCP) Server for WhatsApp Cloud API & Autonomous Multi-Turn Negotiation",
+  "main": "server.js",
+  "bin": {
+    "whatsapp-agent-mcp": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_mcp.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "whatsapp",
+    "meta-cloud-api",
+    "ai-agent",
+    "negotiation",
+    "procurement",
+    "messaging"
+  ],
+  "author": "Merlot AutoProcure AI",
+  "license": "MIT",
+  "dependencies": {}
+}

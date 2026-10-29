@@ -1,4 +1,5 @@
 vendor_id,vendor_name,contact_person,phone,whatsapp,location,products_supplied,base_cost,floor_price,lead_time_days,moq,rating,upi_id,bank_account,ifsc
+v_gokul,Gokul Botanical Wholesale,Gokul,+917012920612,7012920612,Kerala Botanical Hub,p_snake_plant_10in;p_fiddle_leaf_fig;p_monstera_deliciosa;p_zz_plant_premium;m1,320,280,1,20,4.9,gokul@icici,50200070129206,ICIC0001234
 v_deccan,Deccan Flora Wholesale Nursery,Ramesh Patel,+91XXXXXXXXXX,9846625845,Pune Regional Hub,p_snake_plant_10in;p_fiddle_leaf_fig;p_monstera_deliciosa;p_zz_plant_premium,340,250,1,20,4.8,deccanflora@icici,5.02E+13,ICIC0001234
 v_greencanopy,Green Canopy Growers,Anil Rao,+91XXXXXXXXXX,9846625845,Kadiam Botanical Cluster,p_snake_plant_10in;p_fiddle_leaf_fig,320,260,2,30,4.6,greencanopy@upi,9.19812E+11,PYTM0123456
 v_biogreens,BioGreens Botanical Nursery,Suresh Gowda,+91XXXXXXXXXX,9846625845,Bengaluru Agro Corridor,p_snake_plant_10in;p_monstera_deliciosa,310,255,4,50,4.2,biogreens@sbi,30891234567,SBIN0004567

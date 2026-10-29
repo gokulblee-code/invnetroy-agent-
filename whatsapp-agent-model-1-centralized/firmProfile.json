@@ -1,0 +1,23 @@
+{
+  "firm_name": "",
+  "owner_name": "",
+  "phone": "",
+  "whatsapp": "",
+  "address": "",
+  "city": "",
+  "gstin": "",
+  "corporate_upi_id": "",
+  "bank_name": "",
+  "account_number": "",
+  "ifsc_code": "",
+  "auto_approval_limit": 25000,
+  "min_gross_margin_pct": 35,
+  "max_ceiling_price": 310,
+  "qr_code_data": "",
+  "registered_at": "2026-10-28T05:57:55.915Z",
+  "target_margin_pct": 50,
+  "custom_guardrail_options": [],
+  "custom_monitored_items": [],
+  "updated_at": "2026-10-28T05:57:55.915Z",
+  "global_low_stock_threshold": 3
+}

@@ -1,0 +1,52 @@
+{
+  "firm_name": "",
+  "owner_name": "",
+  "phone": "",
+  "whatsapp": "",
+  "address": "",
+  "city": "",
+  "gstin": "",
+  "corporate_upi_id": "",
+  "bank_name": "",
+  "account_number": "",
+  "ifsc_code": "",
+  "auto_approval_limit": 25000,
+  "min_gross_margin_pct": 35,
+  "max_ceiling_price": 310,
+  "qr_code_data": "",
+  "registered_at": "2026-10-28T05:57:55.915Z",
+  "target_margin_pct": 50,
+  "custom_guardrail_options": [],
+  "custom_monitored_items": [
+    {
+      "id": "p_snake_plant_10in",
+      "name": "Snake Plant (Sansevieria Laurentii)",
+      "stock": 8,
+      "min_stock": 20,
+      "price": 499
+    },
+    {
+      "id": "p_fiddle_leaf_fig",
+      "name": "Fiddle Leaf Fig Premium (Ficus Lyrata)",
+      "stock": 5,
+      "min_stock": 15,
+      "price": 1499
+    },
+    {
+      "id": "p_monstera_deliciosa",
+      "name": "Monstera Deliciosa Swiss Cheese",
+      "stock": 12,
+      "min_stock": 25,
+      "price": 799
+    },
+    {
+      "id": "p_neem_oil_500ml",
+      "name": "Organic Cold-Pressed Neem Oil Spray (500ml)",
+      "stock": 15,
+      "min_stock": 20,
+      "price": 299
+    }
+  ],
+  "updated_at": "2026-10-29T06:12:55.092Z",
+  "global_low_stock_threshold": 3
+}
