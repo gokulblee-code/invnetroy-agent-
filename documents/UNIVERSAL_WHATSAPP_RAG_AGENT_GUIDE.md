@@ -1,6 +1,6 @@
 # 📱 Universal WhatsApp RAG, Multi-Turn Reasoning & Autonomous Negotiation Agent
 ### Master Developer Guide, Architectural Blueprint & Drop-In Integration Module
-#### Suitable for Any Domain: University Admissions, Academic Counseling, Commercial Sourcing, E-Commerce, Service Portals & Customer Support
+#### Firm Case Study: Merlot Home Decor & Nursery (Vallakom, Vaikom, Kerala) — Inbound Client Qualification, Consultative Selling & Vendor Sourcing
 
 ---
 
@@ -16,8 +16,8 @@
 9. [Express Webhook Server Integration (`server.js`)](#9-express-webhook-server-integration-serverjs)
 10. [Python / FastAPI Drop-In Implementation (`main.py`)](#10-python--fastapi-drop-in-implementation-mainpy)
 11. [Domain Case Studies & Turn-by-Turn Dialogues](#11-domain-case-studies--turn-by-turn-dialogues)
-    - [Case Study 1: University Admissions, Academic Counseling & Scholarship Reasoning](#case-study-1-university-admissions-academic-counseling--scholarship-reasoning)
-    - [Case Study 2: B2B Commercial Procurement & Wholesale Sourcing](#case-study-2-b2b-commercial-procurement--wholesale-sourcing)
+    - [Case Study 1: Merlot Home Decor & Nursery — Inbound Customer Consultative Sales & Botanical Socratic Selling](#case-study-1-merlot-home-decor--nursery--inbound-customer-consultative-sales--botanical-socratic-selling)
+    - [Case Study 2: Merlot Wholesale Procurement & Supplier Margin Negotiation](#case-study-2-merlot-wholesale-procurement--supplier-margin-negotiation)
 12. [WhatsApp Provider Setup (Meta Cloud API & Twilio Sandbox)](#12-whatsapp-provider-setup-meta-cloud-api--twilio-sandbox)
 13. [Environment Variables (`.env`) & Deployment Checklist](#13-environment-variables-env--deployment-checklist)
 
@@ -652,26 +652,28 @@ const { processWhatsAppInbound } = require('./src/modules/whatsappAgentCore');
 const app = express();
 app.use(express.json());
 
-// Example Domain Configuration (Admissions Portal)
-const ADMISSIONS_CONFIG = {
-  agentName: 'Aarav (Admissions Counselor)',
-  organizationName: 'Symbiosis International Institute',
-  standardPrice: 150000,
-  policyLimit: 120000, // Maximum allowed concession floor (₹1,20,000 minimum fee)
-  supportContact: '+91 98765 11111'
+// Example Domain Configuration (Merlot Home Decor & Nursery)
+const MERLOT_CONFIG = {
+  agentName: 'Assistant of the firm Merlot',
+  organizationName: 'Merlot Home Decor & Nursery',
+  storeAddress: 'Vallakom, Vaikom, Kottayam, Kerala - 686141',
+  standardPrice: 450, // Benchmark indoor plant price (with ceramic planter)
+  policyLimit: 220,   // Base grow-bag minimum price floor
+  supportContact: '+91 98475 46443',
+  upiId: 'merlotdecor@icici'
 };
 
-// RAG Resolver Function (Connect your database, Markdown files, or ChromaDB here)
-async function admissionsRAGResolver({ query, session }) {
+// RAG Resolver Function (Connect your database, Markdown files, or Vector DB here)
+async function merlotRAGResolver({ query, session }) {
   return `
-- B.Tech CSE: 4 years. Eligibility: 60%+ in 12th PCM.
-- Annual Tuition: ₹1,50,000. Hostel: ₹65,000/year.
-- Lab Amenities: Dedicated NVIDIA DGX AI compute cluster, AWS Academy Cloud Lab, ABET-accredited curriculum.
-- Placements: 98.4% placement rate, 42 LPA highest package, Microsoft/Amazon recruiting partners.
-- Merit Scholarships:
-  * 90%+ in 12th: Up to 20% tuition waiver (Net fee: ₹1,20,000).
-  * 80-89% in 12th: Up to 10% tuition waiver (Net fee: ₹1,35,000).
-- Application Deadline: June 30, 2026.
+- Firm Identity: Assistant of the firm Merlot (Merlot Home Decor & Nursery, Vallakom, Vaikom, Kerala).
+- Snake Plant (Sansevieria Laurentii): ₹220 (Grow Bag) | ₹450 (Ceramic). NASA #1 Air Purifier, CAM nocturnal oxygen release. Water every 14-20 days.
+- ZZ Plant (Zamioculcas Zamiifolia): ₹280 (Standard) | ₹520 (Ceramic). Survives windowless IT cabins and dry AC air. Water every 20-25 days.
+- Peace Lily (Spathiphyllum): ₹340 - ₹380. High-humidity lover, alerts when thirsty, white spathe flowers.
+- Monstera Deliciosa: ₹499. Architectural split leaves, ideal for living lounges.
+- Areca Palm: ₹310 (3ft) | ₹449 (4ft Cluster). 100% ASPCA certified pet-safe for cats and dogs.
+- Jade Plant: ₹249. Vastu and Feng Shui prosperity charm.
+- Kerala Climate Care: Humid coastal monsoon watering every 18-20 days, summer watering every 12-14 days. Potting soil uses aerated coco-peat and perlite mix.
 `;
 }
 
@@ -700,8 +702,8 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
     await processWhatsAppInbound({
       fromPhone: msg.from,
       messageText: msg.text?.body,
-      domainConfig: ADMISSIONS_CONFIG,
-      ragKnowledgeResolver: admissionsRAGResolver
+      domainConfig: MERLOT_CONFIG,
+      ragKnowledgeResolver: merlotRAGResolver
     });
   } catch (err) {
     console.error('❌ Webhook Error:', err.message);
@@ -711,12 +713,12 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 // 3. Direct Simulator Endpoint (For Local Testing without Meta)
 app.post('/api/whatsapp/simulate-turn', async (req, res) => {
   try {
-    const { fromPhone = '919876543210', messageText } = req.body;
+    const { fromPhone = '919846625845', messageText } = req.body;
     const result = await processWhatsAppInbound({
       fromPhone,
       messageText,
-      domainConfig: ADMISSIONS_CONFIG,
-      ragKnowledgeResolver: admissionsRAGResolver
+      domainConfig: MERLOT_CONFIG,
+      ragKnowledgeResolver: merlotRAGResolver
     });
     res.json(result);
   } catch (err) {
@@ -804,51 +806,145 @@ async def inbound_webhook(request: Request, background_tasks: BackgroundTasks):
 
 ## 11. Domain Case Studies & Turn-by-Turn Dialogues
 
-### Case Study 1: University Admissions, Academic Counseling & Scholarship Reasoning
+### Case Study 1: Merlot Home Decor & Nursery — Inbound Customer Consultative Sales & Botanical Socratic Selling
 
-- **Actor:** Prospective Student or Parent.
-- **Scenario:** The student begins with exploratory questions, asks for the reasoning behind tuition fees, and then negotiates a merit concession within institutional guardrails.
+- **Actor:** Inbound WhatsApp User (Potential Customer or Supplier).
+- **Firm Identity:** Merlot Home Decor & Nursery (Vallakom, Vaikom, Kottayam, Kerala - 686141 | Phone: +91 98475 46443).
+- **Scenario:** The user sends "Hi", discovers the assistant's identity, asks for store inventory with pricing, specs and care sheets (KS), explains they are an IT job seeker seeking a plant for their room, receives deep lifestyle analysis, shares their locality, and closes the order with delivery!
 
 ```markdown
-Turn 1: [Exploratory Discussion & Career Counseling]
-Student: "Hi! I am confused between B.Tech Computer Science and Data Science. I scored 92% in 12th. Which has better career scope?"
-Agent Strategic Reasoning: "Cognitive Mode 1 (Exploratory Counseling). Grounded in RAG curriculum details. Highlight difference between core algorithms vs data modeling, validate student's strong 92% score."
+Turn 1: [Inbound Greeting & Role Qualification]
+User: "Hi"
+Agent Strategic Reasoning: "Cognitive Mode 1 (Welcome & Role Qualification). The user greeted with 'Hi'. Never drop greetings silently. Introduce Merlot identity and qualify whether the user is a retail customer or wholesale vendor."
 WhatsApp Reply:
-"Namaste! Congratulations on your remarkable 92% score! 🌟
-Both branches are top-tier at Symbiosis. *B.Tech CSE* offers broader foundational engineering across systems, cloud, and software architecture, while *Data Science* specializes deeply in machine learning and analytics.
-With your 92% score in Maths & Physics, you are well-suited for either! Would you prefer building complete software systems or focusing on AI/Data modeling?"
+"🌿 *Namaste & Welcome to Merlot Home Decor & Nursery!* 🌿
 
-Turn 2: [Explanatory Reasoning - Explaining the 'Why']
-Student: "Why is the CSE annual fee ₹1,50,000 when local engineering colleges charge only ₹70,000?"
-Agent Strategic Reasoning: "Cognitive Mode 2 (Explanatory Reasoning). Grounded in RAG lab infrastructure & placement facts. Provide transparent rationale instead of defensive rejection."
-WhatsApp Reply:
-"We completely understand why that comparison comes to mind! 
-The difference lies in what is included: our program provides hands-on training on dedicated *NVIDIA DGX AI compute clusters*, AWS cloud credits, and direct recruiting partnerships with Microsoft and Amazon (yielding a *98.4% placement rate* with a 42 LPA peak).
-Local institutions typically do not include advanced computing lab licenses or faculty mentorship at this level."
+I am an assistant of the firm *Merlot*. We are delighted to connect with you!
 
-Turn 3: [Tactical Negotiation with Policy Floor]
-Student: "That makes sense. But can you offer a scholarship? My family budget is ₹1,00,000/year."
-Agent Strategic Reasoning: "Cognitive Mode 4 (Tactical Negotiation). Student qualifies for 90%+ merit quota (₹1,20,000 floor). Student requested ₹1,00,000 which breaches floor. Counter at ₹1,20,000 and offer 2 semester installments."
-WhatsApp Reply:
-"We deeply respect your family's commitment to quality education!
-Because of your son's outstanding 92% score, he qualifies for our *Dean's Merit Scholarship*, which brings the fee down to our institutional floor of *₹1,20,000/year* (a 20% waiver).
-To accommodate your family budget, we can divide this into two zero-interest semester installments of *₹60,000*.
-Can we lock in his provisional seat token at this rate today?"
+To help you in the best way possible, could you please tell me:
+👉 Are you a *Customer* looking to buy beautiful indoor plants & decor for your home or workspace, or a *Vendor* partnering with us for wholesale nursery supplies?
 
-Turn 4: [Agreement Closure & Token Issuance]
-Student: "Yes, that installment plan works for us. Please reserve the seat."
-Agent Strategic Reasoning: "Cognitive Mode 4 (Agreement Closure). Verified affirmative consent at ₹1,20,000. Generate admission token and enrollment link."
+_Please reply with:_
+*1.* 🛒 *Customer* (Looking to buy products / decorate a space)
+*2.* 🚚 *Vendor* (Wholesale nursery supplier / vendor partnership)"
+
+Turn 2: [Identity Inquiry]
+User: "What are you?"
+Agent Strategic Reasoning: "Cognitive Mode 2 (Firm Identity & Value Proposition). Explicitly state that the agent is an assistant of the firm Merlot and describe the nursery's specialty."
 WhatsApp Reply:
-"Wonderful! We have reserved your provisional merit seat for B.Tech CSE! 🎓
-📜 *Provisional Token:* #ADM-SYM-849102
-💳 *Net Tuition:* ₹1,20,000/year (Installment 1: ₹60,000)
-🔗 Complete registration and document verification here: https://admissions.univ.edu/confirm?token=ADM-SYM-849102
-Welcome to the Symbiosis family!"
+"🌿 *I am an assistant of the firm Merlot.* 🌿
+
+Merlot Home Decor & Nursery is your premier botanical sanctuary located in Vallakom, Vaikom, Kerala (PIN: 686141).
+
+We specialize in air-purifying indoor plants, exotic foliage, handcrafted ceramic & terracotta planters, organic potting soils, and custom landscape interior styling.
+
+Whether you are looking to green your workspace, bedroom, or living lounge — or partner with us as a wholesale grower — I am here to assist you!
+
+So, how can I help you today?"
+
+Turn 3: [Store Items & Knowledge Sheets (KS) Inquiry]
+User: "Can you give me the details of the items that is in your store?"
+Agent Strategic Reasoning: "Cognitive Mode 3 (Inventory Grounded Retrieval). Retrieve live inventory catalog with exact prices, botanical specs, features, and Care Sheets (KS). Append 3 consultative probing questions (occupation, purpose/room, locality) to drive conversational selling."
+WhatsApp Reply:
+"🌿 *MERLOT HOME DECOR & NURSERY — STORE INVENTORY & CATALOG* 🌿
+📍 *Location:* Vallakom, Vaikom, Kottayam, Kerala - 686141
+📞 *Direct Line:* +91 98475 46443
+
+Here is our live store inventory with prices, features, specs, and Knowledge Sheets (KS):
+
+1. 🌿 *Snake Plant (Sansevieria Laurentii / Golden Hahnii)*
+   • *Price:* ₹220 (Grow Bag) | ₹450 (In Handcrafted Ceramic Pot)
+   • *Specs:* 8-12 inch height, dense upright sword-like foliage with yellow golden borders.
+   • *Features & KS:* NASA #1 Air Purifier! Filters benzene, formaldehyde, xylene & toluene. Performs CAM photosynthesis (releases fresh oxygen during night).
+   • *Care:* Low light & AC friendly. Water once every 14-20 days. Near indestructible!
+
+2. 🌿 *ZZ Plant (Zamioculcas Zamiifolia)*
+   • *Price:* ₹280 (Standard) | ₹520 (Premium Ceramic)
+   • *Specs:* 12-16 inch, thick bulbous water-storing rhizomes, glossy emerald-green oval leaves.
+   • *Features & KS:* Drought-tolerant superstar. Survives dark corners, windowless IT cabins, and low ambient humidity.
+   • *Care:* Water only once every 20-25 days. Allow soil to dry 100% between waterings.
+
+3. 🌸 *Peace Lily (Spathiphyllum Wallisii)*
+   • *Price:* ₹340 - ₹380
+   • *Specs:* 10-14 inch, deep green ribbed foliage with elegant white hood-like spathes (blooms).
+   • *Features & KS:* High-efficiency humidity booster and toxin absorber. Alerts you by drooping slightly when thirsty!
+   • *Care:* Bright filtered/indirect light. Water weekly.
+
+4. 🍃 *Monstera Deliciosa (Swiss Cheese Plant)*
+   • *Price:* ₹499
+   • *Specs:* 14-20 inch, iconic broad split fenestrated leaves.
+   • *Features & KS:* Dramatic interior architectural statement plant.
+   • *Care:* Moderate to bright indirect light. Mist leaves weekly; water when top 2 inches dry.
+
+5. 🌴 *Areca Palm Air Purifier (Dypsis Lutescens)*
+   • *Price:* ₹310 (3ft Premium) | ₹449 (4ft Cluster)
+   • *Specs:* 24-40 inch, lush tropical feathery fronds.
+   • *Features & KS:* Natural whole-room humidifier (transpires 1L moisture/day). 100% ASPCA non-toxic and pet-safe for cats & dogs!
+   • *Care:* Bright indirect sunlight, moist well-draining soil.
+
+6. 🪴 *Jade Plant (Crassula Ovata - Money & Fortune Tree)*
+   • *Price:* ₹249
+   • *Specs:* Fleshy round jade-green succulent leaves, bonsai-style trunk.
+   • *Features & KS:* Vastu & Feng Shui charm for prosperity, wealth & positive energy.
+   • *Care:* Bright sunny window, water once every 10-14 days.
+
+7. 🏺 *Artisanal Ceramic & Terracotta Planters*
+   • *Price:* ₹160 (Khurja Terracotta 8") | ₹290 - ₹340 (Nordic Matte Ceramic Pots 6-10")
+   • *Specs:* High-fired pottery with bottom drainage holes and optional drip saucers.
+
+--------------------------------
+✨ *To help me recommend the ideal botanical companion for you:*
+1. 💼 *What is your occupation or daily lifestyle routine?*
+2. 🏠 *Why are you buying this item, and which room will it live in (bedroom, desk, living room, balcony)?*
+3. 📍 *Can you tell us your locality / town (to advise the exact Kerala watering calendar)?*"
+
+Turn 4: [Contextual Analysis & Socratic Botanical Selling]
+User: "I am a technical IT job seeker, so I needed to plant a plant inside my room, so can you suggest me?"
+Agent Strategic Reasoning: "Cognitive Mode 4 (Contextual Analysis & Consultative Selling). Analyze client's profile: IT job seeker -> high screen time, closed room, AC dry air, nighttime study/interviews. Recommend Snake Plant for CAM nighttime O2 and ZZ Plant for low desk light. Ask for locality."
+WhatsApp Reply:
+"🌿 *Botanical Recommendation for Your IT Workspace & Bedroom* 💻🌱
+
+Thank you for sharing your background! As a technical IT job seeker spending long hours coding, studying, and attending virtual interviews in an enclosed room:
+• Your room frequently has dry air from air-conditioning or fans, artificial LED lighting, and electromagnetic static from laptops & monitors.
+• You need a plant that produces fresh oxygen during nighttime study hours, relieves eye strain, and requires zero daily maintenance so you can stay 100% focused on your career goals!
+
+🎯 *Top 2 Tailored Recommendations from Our Inventory:*
+
+1. 🥇 *Snake Plant (Sansevieria Laurentii) — The IT Night-Owl's Shield*
+   • *Price:* ₹220 (Grow Bag) | ₹450 (In Handcrafted Ceramic Pot)
+   • *Why it's perfect for you:* Unlike almost all other plants, Snake Plants perform Crassulacean Acid Metabolism (CAM) — they absorb CO2 and release pure oxygen *at night* while you sleep, ensuring you wake up refreshed with sharp mental clarity. It is NASA-certified to filter VOCs (benzene & formaldehyde) from electronic devices, and needs watering only once every 14-20 days. Even during intense coding sprint weeks, it will thrive without fuss!
+
+2. 🥈 *ZZ Plant (Zamioculcas Zamiifolia) — The Indestructible Desk Green*
+   • *Price:* ₹280 (Standard) | ₹520 (In Nordic Matte Planter)
+   • *Why it's perfect for you:* Its glossy emerald-green leaves reflect ambient screen and desk light, relieving ocular fatigue. It thrives even in windowless rooms with 100% artificial lighting and needs watering only once every 3 weeks.
+
+📍 *Can you tell us about your locality or town (e.g., Kottayam, Kochi, Vaikom, or elsewhere in Kerala)?*
+Knowing your locality helps us customize the potting substrate (aerated perlite mix) and give you the exact monsoon vs. summer watering calendar!
+
+🚀 *Shall I reserve a healthy Snake Plant in a designer ceramic pot for you? We pack it securely with nutrient-rich organic soil and offer direct delivery!*"
+
+Turn 5: [Locality Care Rules & Order Closing]
+User: "I am from Kottayam, Kerala"
+Agent Strategic Reasoning: "Cognitive Mode 5 (Localized Climate Calibration & Deal Closure). User confirmed locality Kottayam. Ground watering advice in humid coastal Kerala climate (monsoon vs summer). Provide payment options and push to confirm reservation."
+WhatsApp Reply:
+"📍 *Wonderful! Tailored Climate Care for KOTTAYAM:*
+
+In Kerala's tropical climate, humidity remains high throughout most of the year. For your plant in KOTTAYAM:
+• 🌧️ *Monsoon Season:* Water your Snake Plant / ZZ Plant only once every 18-20 days. Always make sure the top 2 inches of soil are completely dry before watering.
+• ☀️ *Summer Season:* Water once every 12-14 days.
+• *Potting Mix:* We pot all our plants in an aerated coco-peat, perlite, and vermicompost blend to prevent root rot in coastal humidity.
+
+💳 *Next Steps & Order Confirmation:*
+1. 🚚 *Safe Doorstep Delivery:* Shipped in protective wooden/cushioned packaging.
+2. 🏬 *Store Pickup:* Visit our nursery at Vallakom, Vaikom, Kerala.
+3. 💳 *Easy Payment:* UPI (merlotdecor@icici) or Cash on Delivery.
+
+Shall I confirm your order for the Snake Plant in Ceramic Planter (₹450) or Grow Bag (₹220)? Please share your delivery address or contact name!"
 ```
 
 ---
 
-### Case Study 2: B2B Commercial Procurement & Wholesale Sourcing
+### Case Study 2: Merlot Wholesale Procurement & Supplier Margin Negotiation
 
 - **Actor:** Wholesale Supplier / Nursery Vendor.
 - **Scenario:** Replenishing depleted retail inventory, using RAG past clearing rates, and negotiating price within corporate ceiling limit (₹250/unit) with instant UPI settlement.

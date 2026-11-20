@@ -1,16 +1,48 @@
+# Dependencies
 node_modules/
 **/node_modules/
+
+# Environment Variables & Secrets (CRITICAL: Never commit API keys or credentials)
 .env
-**/.env*
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.env
+*.key
+*.pem
+*.cert
+
+# WhatsApp Auth, Sessions & Baileys Credentials
+data/
+**/data/
+baileys_auth/
+**/baileys_auth/
+*creds*.json
+*session*.json
+*.session*
+
+# Database & Storage
 *.sqlite
 *.sqlite3
 *.sqlite-shm
 *.sqlite-wal
+*.db
+
+# Logs & Audit History
 *.log
+logs/
+**/logs/
+backend/watchtower_audit_log.json
+watchtower_audit_log.json
+backend/vendorHistory.json
+restock_cooldowns.json
+
+# System & OS Files
 .DS_Store
 Thumbs.db
 *.exe
 .ngrok.exe*
 *.bak
 scratch/
-backend/vendorHistory.json

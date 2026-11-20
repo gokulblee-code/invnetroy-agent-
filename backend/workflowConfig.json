@@ -12,8 +12,21 @@
   "enableAutoUpiGeneration": true,
   "enableAutoPoDispatch": true,
   "requireHumanSignOffAboveLimit": true,
-  "updatedAt": "2026-10-28T05:57:44.876Z",
+  "updatedAt": "2026-10-30T08:30:00.000Z",
   "companies": {
+    "tenant_merlot_01": {
+      "company_id": "tenant_merlot_01",
+      "orchestration_mode": "auto",
+      "failure_policy": "retry",
+      "max_retries": 3,
+      "rag_enabled": 1,
+      "reasoning_enabled": 1,
+      "planner_enabled": 1,
+      "active_workflow_id": "AUTONOMOUS_ACKERMAN",
+      "active_workflow_label": "⚡ Autonomous Ackerman Protocol",
+      "stages_count": 10,
+      "updated_at": "2026-10-30T08:30:00.000Z"
+    },
     "company_alpha": {
       "company_id": "company_alpha",
       "orchestration_mode": "planner",

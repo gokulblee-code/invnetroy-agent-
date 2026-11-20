@@ -5,6 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const inventoryRouter = require('./backend/route');
 const posBridge = inventoryRouter.posBridge;
 const autoWatchdog = inventoryRouter.autoWatchdog;
@@ -72,11 +73,22 @@ app.use('/api', inventoryRouter);
 app.use(express.static(path.join(__dirname, 'frontend')));
 app.use(express.static(__dirname));
 
-app.get(['/', '/agent', '/agent.html'], (req, res) => {
+app.get(['/', '/agent', '/agent.html', '/inventory_agent.html', '/index.html'], (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  res.sendFile(path.join(__dirname, 'frontend', 'agent.html'));
+  const candidates = [
+    path.join(__dirname, 'inventory_agent.html'),
+    path.join(__dirname, 'index.html'),
+    path.join(__dirname, 'agent.html'),
+    path.join(__dirname, 'frontend', 'inventory_agent.html'),
+    path.join(__dirname, 'frontend', 'index.html'),
+    path.join(__dirname, 'frontend', 'agent.html')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return res.sendFile(c);
+  }
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const server = app.listen(PORT, async () => {

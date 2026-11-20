@@ -1,0 +1,32 @@
+[
+  {
+    "id": "rule_default_1",
+    "title": "Peat Moss & Potting Media Freight Cap",
+    "condition_type": "FREIGHT_DELIVERY",
+    "condition_trigger": "when vendor asks for delivery fee, transport surcharge, or mentions freight/peat expenses",
+    "action_guidance": "Acknowledge transit expense, allow maximum ₹10/unit delivery buffer, but strictly condition it on immediate same-day dispatch and 100% advance corporate UPI settlement.",
+    "enforcement_level": "MANDATORY",
+    "enabled": true,
+    "created_at": "2026-10-30T10:49:31.662Z"
+  },
+  {
+    "id": "rule_default_2",
+    "title": "Partial Inventory Concession Anchor",
+    "condition_type": "PARTIAL_STOCK",
+    "condition_trigger": "when vendor states they only have limited or partial stock less than the required batch",
+    "action_guidance": "Agree to take all their available stock today to clear their warehouse, but negotiate a ₹15-₹20/unit price discount due to the unfulfilled inventory shortfall.",
+    "enforcement_level": "MANDATORY",
+    "enabled": true,
+    "created_at": "2026-10-30T10:49:31.662Z"
+  },
+  {
+    "id": "rule_default_3",
+    "title": "100% Instant Corporate UPI Trade-Off for Margin Defense",
+    "condition_type": "PRICE_RESISTANCE",
+    "condition_trigger": "when vendor resists discount or quotes price near the maximum ceiling limit",
+    "action_guidance": "Offer zero payment risk: guarantee 100% instant corporate UPI payout immediately upon dispatch confirmation in exchange for them matching our target price floor.",
+    "enforcement_level": "MANDATORY",
+    "enabled": true,
+    "created_at": "2026-10-30T10:49:31.662Z"
+  }
+]

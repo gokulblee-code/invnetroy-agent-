@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "host": "http://61.2.142.91:8885",
+  "model": "llama3.2:3b",
+  "temperature": 0.2,
+  "context_length": 4096
+}
+

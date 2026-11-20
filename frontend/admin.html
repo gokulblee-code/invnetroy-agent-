@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merlot MyBlocks Admin • WhatsApp Supervisory & Rule Governance Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #f8fafc; color: #0f172a; }
+    .glass-card { 
+      background: #ffffff; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 16px; 
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04); 
+    }
+    .glass-input { 
+      background: #ffffff; 
+      border: 1px solid #cbd5e1; 
+      color: #0f172a; 
+      border-radius: 10px;
+      transition: all 0.15s ease-in-out;
+    }
+    .glass-input:focus { 
+      border-color: #059669; 
+      outline: none; 
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18); 
+    }
+    .badge-high { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+    .badge-medium { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+    .badge-low { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .badge-ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-slate-50 text-slate-800">
+
+  <!-- ==================== 1. ADMIN LOGIN VIEW (Bypassed - Direct Access) ==================== -->
+  <div id="loginView" class="hidden"></div>
+
+  <!-- ==================== 2. MAIN SUPERVISORY DASHBOARD ==================== -->
+  <div id="dashboardView" class="min-h-screen flex flex-col bg-slate-50">
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-2xs">
+      <div class="flex items-center space-x-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-lg">
+          🛡️
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-slate-900">Merlot MyBlocks Admin Oversight</h1>
+            <span class="px-2.5 py-0.5 text-xs rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">SUPER_ADMIN</span>
+          </div>
+          <p class="text-xs text-slate-500">Autonomous WhatsApp Procure Engine • Real-time Rule Governance</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <a href="/inventory-ui" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 border border-slate-300 flex items-center space-x-1.5 transition shadow-2xs">
+          <span>🌿 Open POS Cockpit</span>
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+        <button onclick="refreshData()" class="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 transition shadow-2xs cursor-pointer" title="Refresh">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+        <button onclick="refreshData()" class="px-3.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5">
+          <span>🔄 Refresh Chats</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPI Banner -->
+    <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="glass-card p-5 rounded-2xl flex items-center justify-between bg-white border border-slate-200 shadow-xs">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Monitored Chats</p>
+          <p id="statTotalChats" class="text-2xl font-extrabold text-slate-900 mt-1">--</p>
+          <p class="text-xs text-slate-400 mt-1">MySQL Cloud Sync Active</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-xl">💬</div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl flex items-center justify-between bg-white border border-slate-200 shadow-xs">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Rule Breaches Detected</p>
+          <p id="statBreaches" class="text-2xl font-extrabold text-amber-600 mt-1">--</p>
+          <p class="text-xs text-slate-400 mt-1">Freight / Ceiling / Cloud-bot</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl">🚨</div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl flex items-center justify-between bg-white border border-slate-200 shadow-xs">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Connected Suppliers</p>
+          <p id="statSuppliers" class="text-2xl font-extrabold text-emerald-600 mt-1">3 Verified</p>
+          <p class="text-xs text-slate-400 mt-1">Deccan Flora, Tapovan, Pune</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xl">🌿</div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl flex items-center justify-between bg-white border border-slate-200 shadow-xs">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Supervisory Hold</p>
+          <p id="statAiPaused" class="text-2xl font-extrabold text-indigo-600 mt-1">0 Paused</p>
+          <p class="text-xs text-slate-400 mt-1">Human-in-the-loop ready</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-xl">⏸️</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="px-6 border-b border-slate-200 bg-white flex space-x-6">
+      <button onclick="switchTab('chats')" id="tabBtn-chats" class="tab-btn py-3.5 text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 transition cursor-pointer">
+        🛰️ Live WhatsApp Inspector & Rectifier
+      </button>
+      <button onclick="switchTab('intervene')" id="tabBtn-intervene" class="tab-btn py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent transition cursor-pointer">
+        ✍️ Supervisor Intervention Terminal
+      </button>
+      <button onclick="switchTab('directory')" id="tabBtn-directory" class="tab-btn py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent transition cursor-pointer">
+        👥 Users & Vendors Directory
+      </button>
+      <button onclick="switchTab('rag')" id="tabBtn-rag" class="tab-btn py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent transition cursor-pointer">
+        📚 RAG & Books Knowledge Hub
+      </button>
+      <button onclick="switchTab('audit')" id="tabBtn-audit" class="tab-btn py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent transition cursor-pointer">
+        📜 Security & Compliance Audit Log
+      </button>
+    </div>
+
+    <!-- TAB 1: LIVE WHATSAPP INSPECTOR -->
+    <main id="tabContent-chats" class="p-6 flex-1 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <input type="text" id="chatSearch" oninput="filterChats()" placeholder="Filter by phone, keyword..." class="glass-input px-3.5 py-1.5 rounded-lg text-xs w-64">
+          <label class="flex items-center space-x-2 text-xs text-slate-600 cursor-pointer font-medium">
+            <input type="checkbox" id="filterIrregularitiesOnly" onchange="loadChats()" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+            <span>Show Rule Breaches Only</span>
+          </label>
+        </div>
+        <div class="text-xs text-slate-500 font-medium">
+          Source: <span class="font-mono text-emerald-700 font-bold">MySQL WHATSAPP_CHAT_LOGS + Local POS Ledger</span>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 uppercase font-bold text-slate-600 border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="p-3.5">Time</th>
+                <th class="p-3.5">Vendor / User</th>
+                <th class="p-3.5">Direction</th>
+                <th class="p-3.5 w-1/3">Message Content</th>
+                <th class="p-3.5">Rule Breach / Irregularity Analysis</th>
+                <th class="p-3.5 text-right">Supervisory Action</th>
+              </tr>
+            </thead>
+            <tbody id="chatsTableBody" class="divide-y divide-slate-100 font-normal">
+              <tr><td colspan="6" class="p-6 text-center text-slate-500">Loading conversation feeds...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 2: SUPERVISOR DIRECT INTERVENTION TERMINAL -->
+    <main id="tabContent-intervene" class="hidden p-6 flex-1 max-w-4xl space-y-6">
+      <div class="glass-card p-6 rounded-2xl space-y-6 bg-white border border-slate-200 shadow-xs">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Manual Supervisor WhatsApp Override</h2>
+          <p class="text-xs text-slate-500">Directly dispatch an authoritative supervisory instruction to any vendor via Meta Cloud API. Bypasses and overrides AI reasoning.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Target Vendor Phone</label>
+            <div class="flex space-x-3">
+              <input type="text" id="intervenePhone" value="919846625845" class="glass-input flex-1 px-4 py-2 rounded-xl text-sm font-mono font-bold text-slate-900">
+              <select onchange="document.getElementById('intervenePhone').value = this.value" class="glass-input px-3 py-2 rounded-xl text-xs font-medium text-slate-700">
+                <option value="919846625845">Current Client (+91 98466 25845)</option>
+                <option value="917012920612">Deccan Flora Wholesale (7012920612)</option>
+                <option value="919423144892">Tapovan Green (Suresh - 9423144892)</option>
+                <option value="919822011943">Pune Botanical (Rajesh - 9822011943)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Supervisory Override Message</label>
+            <textarea id="interveneMessage" rows="4" class="glass-input w-full p-4 rounded-xl text-sm" placeholder="Type authoritative supervisor instruction (e.g. 'Namaste Gokul, Alex Merlot here. We confirm 30 units of Aglaonema at all-inclusive rate of ₹295.60/unit doorstep Pune...')"></textarea>
+          </div>
+
+          <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div>
+              <p class="text-sm font-bold text-slate-900">Pause AI Autopilot for this Number</p>
+              <p class="text-xs text-slate-500">Prevent autonomous agent from responding while supervisor handles conversation.</p>
+            </div>
+            <input type="checkbox" id="intervenePauseAi" class="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+          </div>
+
+          <button onclick="submitIntervention()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 font-bold rounded-xl text-sm text-white transition shadow-xs cursor-pointer">
+            ⚡ Dispatch Direct Supervisory Message to WhatsApp
+          </button>
+        </div>
+
+        <div id="interveneResult" class="hidden p-4 rounded-xl text-xs font-mono"></div>
+      </div>
+    </main>
+
+    <!-- TAB 3: REGISTERED USERS & VENDORS -->
+    <main id="tabContent-directory" class="hidden p-6 flex-1 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Vendors Directory -->
+        <div class="glass-card p-6 rounded-2xl space-y-4 bg-white border border-slate-200 shadow-xs">
+          <h2 class="text-base font-bold text-slate-900 flex items-center justify-between">
+            <span>🌿 Registered Wholesale Vendors</span>
+            <span class="text-xs text-emerald-700 font-mono font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">3 Active</span>
+          </h2>
+          <div id="vendorsList" class="space-y-3">
+            <p class="text-xs text-slate-500">Loading vendors...</p>
+          </div>
+        </div>
+
+        <!-- Users & Tenants Directory -->
+        <div class="glass-card p-6 rounded-2xl space-y-4 bg-white border border-slate-200 shadow-xs">
+          <h2 class="text-base font-bold text-slate-900 flex items-center justify-between">
+            <span>👥 Registered Users & Tenant Profiles</span>
+            <span class="text-xs text-blue-700 font-mono font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Tenant 124</span>
+          </h2>
+          <div id="usersList" class="space-y-3">
+            <p class="text-xs text-slate-500">Loading users...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 4: RAG & BOOKS KNOWLEDGE HUB -->
+    <main id="tabContent-rag" class="hidden p-6 flex-1 max-w-5xl space-y-6">
+      <div class="glass-card p-6 rounded-2xl space-y-6 bg-white border border-slate-200 shadow-xs">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">RAG Architectural Clarification & Ingestion Hub</h2>
+          <p class="text-xs text-slate-500">Comparing Original RAG, Company Trainee RAG, and AutoProcure Engine, along with recommended negotiation literature for ingestion.</p>
+        </div>
+
+        <!-- RAG Comparison Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">PASSIVE</span>
+            <h3 class="text-sm font-bold text-slate-900">1. Original RAG (Naive)</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Pure cosine similarity document chunk retrieval. Lacks economic models, margin thresholds, or bargaining states. Easily confused by pricing context.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">CLOUD BOT</span>
+            <h3 class="text-sm font-bold text-amber-900">2. Company Trainee RAG (myblocks.in:5025)</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">Remote reference-book support bot. Intercepts incoming WhatsApp webhooks and answers with customer-care manual ("$295 / reference book"). Needs persona routing.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">AGENTIC TACTICAL</span>
+            <h3 class="text-sm font-bold text-emerald-900">3. Merlot AutoProcure RAG</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">Autonomous multi-turn bargaining engine with hard economic boundaries (&le; ₹310 ceiling, &ge; 35% margin), Voss Ackerman pricing, and real-time POS stock awareness.</p>
+          </div>
+        </div>
+
+        <!-- Recommended Books for Ingestion -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 mb-3">📖 Recommended Negotiation Literature for Ingestion</h3>
+          <div class="space-y-3">
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+              <span class="text-xl">📕</span>
+              <div>
+                <p class="text-xs font-bold text-slate-900">"Never Split the Difference: Negotiating As If Your Life Depended On It" — Chris Voss</p>
+                <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">Core Playbook: Tactical empathy, calibrated "how/what" questions, Ackerman bargaining step formulas (65% &rarr; 85% &rarr; 95% &rarr; 100%), and non-monetary concession buffers (e.g. instant corporate UPI payment for price concession).</p>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+              <span class="text-xl">📗</span>
+              <div>
+                <p class="text-xs font-bold text-slate-900">"Getting to Yes: Negotiating Agreement Without Giving In" — Roger Fisher & William Ury</p>
+                <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">Core Playbook: Principled negotiation, separating the problem from the vendor relationship, establishing an objective BATNA (Best Alternative to a Negotiated Agreement), and mutual-gain trade-offs.</p>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+              <span class="text-xl">📘</span>
+              <div>
+                <p class="text-xs font-bold text-slate-900">"Bargaining for Advantage: Negotiation Strategies for Reasonable People" — G. Richard Shell</p>
+                <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">Core Playbook: Information-based bargaining, supplier leverage matrices, anchoring psychological price expectations, and closing strategies for high-frequency wholesale reorders.</p>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+              <span class="text-xl">📙</span>
+              <div>
+                <p class="text-xs font-bold text-slate-900">"The Negotiation Fieldbook: Simple Strategies to Help You Negotiate Anything" — Grande Lum</p>
+                <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">Core Playbook: Concrete B2B supply-chain contracts, rejecting ancillary transport charges, volume bundling, and delivery penalty clauses.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 5: AUDIT LOG -->
+    <main id="tabContent-audit" class="hidden p-6 flex-1 space-y-4">
+      <div class="glass-card rounded-2xl overflow-hidden p-6 space-y-4 bg-white border border-slate-200 shadow-xs">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-900">Immutable Regulatory & Security Audit Trail</h2>
+          <span class="text-xs font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">SOC 2 / ISO 27001 Compliant Logging</span>
+        </div>
+        <p class="text-xs text-slate-500">Every admin login, rule rectification, manual intervention, and autopilot toggle is permanently recorded with timestamp, operator ID, and action payload.</p>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 uppercase font-bold text-slate-600 border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="p-3">Timestamp</th>
+                <th class="p-3">Administrator</th>
+                <th class="p-3">Action Type</th>
+                <th class="p-3">Target</th>
+                <th class="p-3">Audit Details</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody" class="divide-y divide-slate-100 font-mono">
+              <tr><td colspan="5" class="p-4 text-center text-slate-500">No audit events recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Rectify Modal -->
+  <div id="rectifyModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full p-6 rounded-2xl space-y-4 bg-white border border-slate-200 shadow-xl">
+      <h3 class="text-base font-bold text-slate-900">Rectify Conversation Irregularity</h3>
+      <p id="rectifyChatSummary" class="text-xs text-slate-700 font-mono p-3 bg-slate-50 rounded-xl border border-slate-200 leading-relaxed"></p>
+      
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Supervisory Resolution Action</label>
+        <select id="rectifyAction" class="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-700">
+          <option value="RATE_SANITY_CONFIRMED">Approved All-Inclusive Rate (Rebuffed Freight Surcharge)</option>
+          <option value="REMOTE_BOT_SUPPRESSED">Remote Cloud-Bot Filtered & Manual Quote Dispatched</option>
+          <option value="CEILING_HELD">Enforced ₹310 Hard Ceiling</option>
+          <option value="CATALOG_MATCHED">Catalog SKU Realigned to Aglaonema</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Supervisor Audit Note</label>
+        <textarea id="rectifyNote" rows="2" class="glass-input w-full p-3 rounded-xl text-xs" placeholder="e.g. Verified with Gokul over phone; all-inclusive rate confirmed at ₹295.60."></textarea>
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-2">
+        <button onclick="closeRectifyModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 border border-slate-300 cursor-pointer">Cancel</button>
+        <button onclick="confirmRectify()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white shadow-xs cursor-pointer">Save Rectification</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('merlot_admin_token') || '';
+    let currentChats = [];
+    let activeRectifyChatId = null;
+
+    // Direct Access (No Login Barrier)
+    window.addEventListener('DOMContentLoaded', () => {
+      showDashboard();
+    });
+
+    async function verifyToken() {
+      try {
+        const res = await fetch('/api/admin/verify', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        const data = await res.json();
+        return data.authenticated;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('dashboardView').classList.add('hidden');
+    }
+
+    function showDashboard() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+      refreshData();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value;
+      const errBox = document.getElementById('loginError');
+      errBox.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          authToken = data.token;
+          localStorage.setItem('merlot_admin_token', authToken);
+          showDashboard();
+        } else {
+          errBox.textContent = data.error || 'Authentication failed.';
+          errBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        errBox.textContent = 'Server connection error: ' + err.message;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+      });
+      authToken = '';
+      localStorage.removeItem('merlot_admin_token');
+      showLogin();
+    }
+
+    function switchTab(tab) {
+      ['chats', 'intervene', 'directory', 'rag', 'audit'].forEach(t => {
+        const btn = document.getElementById('tabBtn-' + t);
+        const view = document.getElementById('tabContent-' + t);
+        if (t === tab) {
+          btn.className = 'tab-btn py-3.5 text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 transition cursor-pointer';
+          view.classList.remove('hidden');
+        } else {
+          btn.className = 'tab-btn py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent transition cursor-pointer';
+          view.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'audit') loadAuditLogs();
+      if (tab === 'directory') loadDirectory();
+    }
+
+    async function refreshData() {
+      loadStats();
+      loadChats();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/stats', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        const data = await res.json();
+        if (data.success && data.stats) {
+          document.getElementById('statTotalChats').textContent = data.stats.totalChats || 0;
+          document.getElementById('statAiPaused').textContent = `${data.stats.aiPausedVendors || 0} Paused`;
+        }
+      } catch (e) {}
+    }
+
+    async function loadChats() {
+      const tbody = document.getElementById('chatsTableBody');
+      const irregularitiesOnly = document.getElementById('filterIrregularitiesOnly').checked;
+
+      try {
+        const res = await fetch(`/api/admin/chats?irregularities=${irregularitiesOnly}`, {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.chats)) {
+          currentChats = data.chats;
+          document.getElementById('statBreaches').textContent = data.irregularityCount || 0;
+          renderChatsTable(currentChats);
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600 font-semibold">Failed to load chat feed: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderChatsTable(chats) {
+      const tbody = document.getElementById('chatsTableBody');
+      if (chats.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500 font-medium">No messages found matching criteria.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = chats.map(c => {
+        const isOutbound = c.direction === 'OUTBOUND';
+        const hasBreach = c.analysis && c.analysis.hasIrregularity;
+        const breachBadge = hasBreach
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.analysis.severity === 'HIGH' ? 'badge-high' : 'badge-medium'}">🚨 ${c.analysis.breaches[0]?.title || 'RULE BREACH'}</span>`
+          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold badge-ok">✅ COMPLIANT</span>';
+
+        const timeStr = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition border-b border-slate-100">
+            <td class="p-3.5 text-slate-500 font-mono text-xs whitespace-nowrap">${timeStr}</td>
+            <td class="p-3.5 whitespace-nowrap">
+              <div class="font-bold text-slate-900">${escapeHtml(c.vendorName || 'Deccan Flora')}</div>
+              <div class="text-[11px] font-mono text-slate-500 font-medium">+${c.phone}</div>
+            </td>
+            <td class="p-3.5 whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono ${isOutbound ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
+                ${isOutbound ? '📤 OUTBOUND' : '📥 INBOUND'}
+              </span>
+            </td>
+            <td class="p-3.5">
+              <div class="text-xs text-slate-800 font-normal leading-relaxed line-clamp-3">${escapeHtml(c.message)}</div>
+              ${c.quotedPrice || c.counterPrice ? `<div class="mt-1 text-[11px] font-mono text-emerald-700 font-bold">Extracted Rate: ₹${c.quotedPrice || c.counterPrice}</div>` : ''}
+            </td>
+            <td class="p-3.5 space-y-1">
+              <div>${breachBadge}</div>
+              ${hasBreach ? `<div class="text-[11px] text-slate-500">${escapeHtml(c.analysis.breaches[0]?.description || '')}</div>` : ''}
+            </td>
+            <td class="p-3.5 text-right space-x-2 whitespace-nowrap">
+              ${hasBreach ? `
+                <button onclick="openRectifyModal('${c.id}', '${escapeAttr(c.message)}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-[11px] font-bold transition shadow-2xs cursor-pointer">
+                  Rectify
+                </button>
+              ` : ''}
+              <button onclick="prepareIntervention('${c.phone}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-[11px] font-semibold transition shadow-2xs cursor-pointer">
+                Intervene
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterChats() {
+      const q = document.getElementById('chatSearch').value.toLowerCase();
+      const filtered = currentChats.filter(c => 
+        (c.phone && c.phone.includes(q)) || 
+        (c.message && c.message.toLowerCase().includes(q)) ||
+        (c.vendorName && c.vendorName.toLowerCase().includes(q))
+      );
+      renderChatsTable(filtered);
+    }
+
+    function prepareIntervention(phone) {
+      document.getElementById('intervenePhone').value = phone;
+      switchTab('intervene');
+    }
+
+    async function submitIntervention() {
+      const phone = document.getElementById('intervenePhone').value.trim();
+      const msg = document.getElementById('interveneMessage').value.trim();
+      const pauseAi = document.getElementById('intervenePauseAi').checked;
+      const resBox = document.getElementById('interveneResult');
+
+      if (!msg) {
+        alert('Please type an intervention message.');
+        return;
+      }
+
+      resBox.className = 'p-4 rounded-xl text-xs font-mono bg-slate-100 text-slate-700 border border-slate-200';
+      resBox.textContent = 'Dispatching supervisory message to WhatsApp via Meta Cloud API...';
+      resBox.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/admin/intervene', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ to: phone, message: msg, pauseAi })
+        });
+        const data = await res.json();
+        if (data.success) {
+          resBox.className = 'p-4 rounded-xl text-xs font-mono bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold';
+          resBox.textContent = '✅ Dispatched to WhatsApp! ' + (data.sendResult?.messageId ? `(Meta ID: ${data.sendResult.messageId})` : '') + (pauseAi ? ' [AI Autopilot PAUSED for this vendor]' : '');
+          document.getElementById('interveneMessage').value = '';
+          refreshData();
+        } else {
+          resBox.className = 'p-4 rounded-xl text-xs font-mono bg-rose-50 border border-rose-200 text-rose-700';
+          resBox.textContent = '❌ Failed: ' + (data.error || 'Unknown error');
+        }
+      } catch (err) {
+        resBox.className = 'p-4 rounded-xl text-xs font-mono bg-rose-50 border border-rose-200 text-rose-700';
+        resBox.textContent = '❌ Connection error: ' + err.message;
+      }
+    }
+
+    function openRectifyModal(chatId, messageSummary) {
+      activeRectifyChatId = chatId;
+      document.getElementById('rectifyChatSummary').textContent = messageSummary.substring(0, 150) + '...';
+      document.getElementById('rectifyModal').classList.remove('hidden');
+    }
+
+    function closeRectifyModal() {
+      document.getElementById('rectifyModal').classList.add('hidden');
+      activeRectifyChatId = null;
+    }
+
+    async function confirmRectify() {
+      const action = document.getElementById('rectifyAction').value;
+      const note = document.getElementById('rectifyNote').value;
+
+      try {
+        const res = await fetch('/api/admin/rectify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ chatId: activeRectifyChatId, actionTaken: action, note })
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeRectifyModal();
+          alert('Rule breach marked as rectified!');
+          refreshData();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to rectify'));
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    async function loadDirectory() {
+      try {
+        const [vRes, uRes] = await Promise.all([
+          fetch('/api/admin/vendors', { headers: { 'Authorization': 'Bearer ' + authToken } }),
+          fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + authToken } })
+        ]);
+        const vData = await vRes.json();
+        const uData = await uRes.json();
+
+        if (vData.success && vData.vendors) {
+          document.getElementById('vendorsList').innerHTML = vData.vendors.map(v => `
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <p class="font-bold text-slate-900 text-xs">${escapeHtml(v.vendorName)}</p>
+                <p class="text-[11px] text-slate-500 font-mono mt-0.5">${escapeHtml(v.contactPerson)} • ${v.phone}</p>
+                <p class="text-[10px] text-emerald-700 font-semibold mt-0.5">Reliability: ${v.reliabilityScore}% • Spend: ${v.cumulativeSpend}</p>
+              </div>
+              <button onclick="prepareIntervention('${v.cleanPhone}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-semibold transition shadow-2xs cursor-pointer">
+                Message
+              </button>
+            </div>
+          `).join('');
+        }
+
+        if (uData.success && uData.users) {
+          document.getElementById('usersList').innerHTML = uData.users.map(u => `
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-slate-900 text-xs">${escapeHtml(u.name)}</p>
+                <span class="px-2 py-0.5 text-[9px] rounded font-mono bg-blue-50 text-blue-700 font-bold border border-blue-200">${u.role}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 font-mono mt-1">${escapeHtml(u.email)} • ${u.phone}</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">Tenant: ${u.tenantId} (Firm: ${u.firmId})</p>
+            </div>
+          `).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function loadAuditLogs() {
+      const tbody = document.getElementById('auditTableBody');
+      try {
+        const res = await fetch('/api/admin/audit-logs', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.logs)) {
+          if (data.logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-500">No events logged yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = data.logs.map(l => `
+            <tr class="hover:bg-slate-50 border-b border-slate-100">
+              <td class="p-3 text-slate-500">${new Date(l.timestamp).toLocaleTimeString()}</td>
+              <td class="p-3 text-emerald-700 font-bold">${escapeHtml(l.admin)}</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold">${escapeHtml(l.action)}</span></td>
+              <td class="p-3 text-slate-800 font-medium">${escapeHtml(l.target)}</td>
+              <td class="p-3 text-slate-600">${escapeHtml(l.details)}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {}
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

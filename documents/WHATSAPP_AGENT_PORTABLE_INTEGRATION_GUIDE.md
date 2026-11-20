@@ -81,17 +81,17 @@ Originally built inside the Merlot Inventory Replenishment system, this engine i
 
 ---
 
-## 🎓 2. Case Study: University Admissions Portal (Step-by-Step)
+## 🌿 2. Case Study: Merlot Home Decor & Nursery (Step-by-Step)
 
-To illustrate how to adapt the engine, consider a **University Admissions Office**:
-- **Actor:** Prospective Student or Parent (messaging via WhatsApp).
-- **Core Domain Goal:** Answer queries about course eligibility, syllabus, hostel fees, and **negotiate/award tuition fee waivers (scholarships)** based on entrance scores without exceeding the Dean's approval limit.
-- **RAG Chunks:** University Prospectus 2026, Fee Schedule, Scholarship Matrix, Hostel Rules.
+To illustrate how to adapt the engine, consider **Merlot Home Decor & Nursery** (Vallakom, Vaikom, Kerala):
+- **Actor:** Inbound WhatsApp Contact (Customer looking to buy plants/decor OR Vendor selling wholesale nursery stock).
+- **Core Domain Goal:** Qualify inbound "Hi" contacts, introduce Merlot identity ("Assistant of the firm Merlot"), provide live store inventory with prices, features, specs and Knowledge Sheets (KS), engage in Socratic consultative selling (e.g. IT job seekers needing nighttime oxygen plants for bedroom desks), and qualify wholesale vendor margin prices.
+- **RAG Chunks:** Merlot Plant Catalog & Care Sheets, Kerala Coastal Monsoon Watering Guidelines, Potting Soil Composition, Vendor Wholesale Benchmarks.
 - **Guardrails:**
-  - Standard B.Tech Tuition Fee: ₹1,50,000/year.
-  - Maximum Allowed Waiver without Dean's Override: 25% (₹37,500).
-  - Minimum Payable Base: ₹1,12,500/year.
-  - Never promise a seat if 12th Board marks < 60%.
+  - Standard Plant Prices: Snake Plant ₹220 - ₹450, ZZ Plant ₹280 - ₹520, Peace Lily ₹340 - ₹380, Monstera ₹499, Areca Palm ₹310 - ₹449.
+  - Never drop "Hi" greetings silently; always ask if user is a Customer (1) or Vendor (2).
+  - Wholesale Procurement Ceiling: Capped at ₹250 for replenishment batches.
+  - Recommend 100% ASPCA pet-safe plants (Areca Palm) when pets are mentioned.
 
 ---
 
@@ -406,25 +406,28 @@ const { processWhatsAppInbound, sendWhatsAppMessage } = require('./src/modules/w
 const app = express();
 app.use(express.json());
 
-// Domain Configuration for Admissions
-const ADMISSIONS_CONFIG = {
-  agentName: 'Aarav (Admissions Counselor)',
-  organizationName: 'Symbiosis International Institute',
-  standardFee: 150000,
-  minimumAcceptableFee: 120000, // Maximum 20% waiver allowed
-  supportContact: '+91 98765 11111'
+// Domain Configuration for Merlot Home Decor & Nursery
+const MERLOT_CONFIG = {
+  agentName: 'Assistant of the firm Merlot',
+  organizationName: 'Merlot Home Decor & Nursery',
+  storeAddress: 'Vallakom, Vaikom, Kottayam, Kerala - 686141',
+  standardFee: 450, // Ceramic Planter Benchmark
+  minimumAcceptableFee: 220, // Grow-bag Base Floor
+  supportContact: '+91 98475 46443',
+  upiId: 'merlotdecor@icici'
 };
 
-// Mock RAG Knowledge Resolver (Replace with your ChromaDB / Pinecone / Local Markdown lookup)
-async function universityRAGResolver({ query, session }) {
-  // In your project, query your vector store or text chunks
+// RAG Knowledge Resolver (Botanical Inventory & Care Sheets)
+async function merlotRAGResolver({ query, session }) {
   return `
-- B.Tech CSE: 4 years, Eligibility: 60%+ in 12th PCM.
-- Annual Tuition Fee: ₹1,50,000. Hostel: ₹65,000/year.
-- Merit Scholarships:
-  * 90%+ in 12th: Up to 20% tuition waiver (Net fee: ₹1,20,000).
-  * 80-89% in 12th: Up to 10% tuition waiver (Net fee: ₹1,35,000).
-- Application Deadline: June 30, 2026.
+- Firm Identity: Assistant of the firm Merlot (Merlot Home Decor & Nursery, Vallakom, Vaikom, Kerala).
+- Snake Plant: ₹220 (Grow Bag) | ₹450 (Ceramic). NASA #1 Air Purifier, CAM nocturnal O2. Water every 14-20 days.
+- ZZ Plant: ₹280 (Standard) | ₹520 (Ceramic). Survives windowless IT cabins and dry AC air. Water every 20-25 days.
+- Peace Lily: ₹340 - ₹380. High humidity, white spathe flowers, alerts when thirsty.
+- Monstera Deliciosa: ₹499. Large split fenestration leaves, living room statement.
+- Areca Palm: ₹310 (3ft) | ₹449 (4ft Cluster). 100% ASPCA certified pet-safe for cats and dogs.
+- Jade Plant: ₹249. Vastu and Feng Shui prosperity tree.
+- Kerala Climate Care: Monsoon watering every 18-20 days, summer watering every 12-14 days. Aerated perlite-vermicompost potting mix.
 `;
 }
 
@@ -458,8 +461,8 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
     await processWhatsAppInbound({
       fromPhone,
       messageText: text,
-      domainConfig: ADMISSIONS_CONFIG,
-      ragKnowledgeResolver: universityRAGResolver
+      domainConfig: MERLOT_CONFIG,
+      ragKnowledgeResolver: merlotRAGResolver
     });
   } catch (err) {
     console.error('❌ Webhook processing error:', err.message);
@@ -469,14 +472,14 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 // 3. Direct Testing / Simulator Endpoint (For local testing without Meta credentials)
 app.post('/api/whatsapp/simulate-turn', async (req, res) => {
   try {
-    const { fromPhone = '919876543210', messageText } = req.body;
+    const { fromPhone = '919846625845', messageText } = req.body;
     if (!messageText) return res.status(400).json({ error: 'messageText is required' });
 
     const result = await processWhatsAppInbound({
       fromPhone,
       messageText,
-      domainConfig: ADMISSIONS_CONFIG,
-      ragKnowledgeResolver: universityRAGResolver
+      domainConfig: MERLOT_CONFIG,
+      ragKnowledgeResolver: merlotRAGResolver
     });
 
     res.json(result);
@@ -486,7 +489,7 @@ app.post('/api/whatsapp/simulate-turn', async (req, res) => {
 });
 
 app.listen(5001, () => {
-  console.log('🚀 WhatsApp Admissions Agent Server running on http://localhost:5001');
+  console.log('🚀 WhatsApp Merlot Agent Server running on http://localhost:5001');
 });
 ```
 
@@ -588,31 +591,68 @@ LLM_API_KEY=AIzaSy...your_gemini_or_openai_key...
 
 ---
 
-## 🧪 7. Turn-by-Turn Admissions Conversation Walkthrough
+## 🧪 7. Turn-by-Turn Merlot Consultative Sales & Sourcing Walkthrough
 
-Here is a verified dialogue trace demonstrating how the RAG + Negotiation operates:
+Here is a verified dialogue trace demonstrating how the Merlot RAG + Qualification + Socratic Selling operates:
 
 ```markdown
-Turn 1:
-Student: "Hello, my son scored 92% in 12th PCM. What is the fee for Computer Science?"
-Agent:   "Namaste! Congratulations on your son's outstanding 92% score! 🌟
-         For B.Tech Computer Science at Symbiosis International, the standard annual tuition fee is ₹1,50,000.
-         However, students with 90%+ in 12th are eligible for our Dean's Merit Scholarship (up to 20% tuition waiver).
-         Would you like to initiate the merit evaluation for an adjusted fee of ₹1,20,000/year?"
+Turn 1: [Inbound Greeting & Role Qualification]
+User:  "Hi"
+Agent: "🌿 *Namaste & Welcome to Merlot Home Decor & Nursery!* 🌿
+       I am an assistant of the firm *Merlot*. We are delighted to connect with you!
+       To help you in the best way possible, could you please tell me:
+       👉 Are you a *Customer* looking to buy beautiful indoor plants & decor for your home or workspace, or a *Vendor* partnering with us for wholesale nursery supplies?
+       _Please reply with:_
+       *1.* 🛒 *Customer* (Looking to buy products / decorate a space)
+       *2.* 🚚 *Vendor* (Wholesale nursery supplier / vendor partnership)"
 
-Turn 2:
-Student: "Can you do ₹1,00,000? Other colleges are offering that."
-Agent:   "We understand budgeting for university education is an important decision. 
-         However, our absolute institutional floor under the Dean's Merit Quota is strictly capped at *₹1,20,000/year* to maintain our advanced computing lab facilities and 100% placement record.
-         To help your family, we can break this into two zero-interest semester installments of *₹60,000*.
-         Can we reserve his seat token at this rate today?"
+Turn 2: [Identity Inquiry]
+User:  "What are you?"
+Agent: "🌿 *I am an assistant of the firm Merlot.* 🌿
+       Merlot Home Decor & Nursery is your premier botanical sanctuary located in Vallakom, Vaikom, Kerala (PIN: 686141).
+       We specialize in air-purifying indoor plants, exotic foliage, handcrafted ceramic & terracotta planters, organic potting soils, and custom landscape interior styling.
+       So, how can I help you today?"
 
-Turn 3:
-Student: "Okay agreed, how do we reserve the seat?"
-Agent:   "Fantastic! We have locked in the Merit Fee of ₹1,20,000/year for B.Tech CSE. 🎓
-         📜 Provisional Token: #ADM-SYM-849102
-         🔗 Click here to upload his 12th marksheet & pay the ₹10,000 registration fee: https://admissions.univ.edu/pay?token=ADM-SYM-849102
-         Welcome to the Symbiosis family!"
+Turn 3: [Store Catalog with Features, Specs & KS]
+User:  "Can you give me the details of the items that is in your store?"
+Agent: "🌿 *MERLOT HOME DECOR & NURSERY — STORE INVENTORY & CATALOG* 🌿
+       📍 *Location:* Vallakom, Vaikom, Kottayam, Kerala - 686141 | 📞 *Direct Line:* +91 98475 46443
+       
+       1. 🌿 *Snake Plant (Sansevieria Laurentii)*: ₹220 (Grow Bag) | ₹450 (Ceramic). NASA #1 Air Purifier, CAM nocturnal O2. Water every 14-20 days.
+       2. 🌿 *ZZ Plant (Zamioculcas Zamiifolia)*: ₹280 | ₹520 (Ceramic). Glossy waxy leaves, thrives in windowless IT cabins and dry AC air. Water every 20-25 days.
+       3. 🌸 *Peace Lily*: ₹340 - ₹380. High humidity lover, alerts when thirsty, white blooms.
+       4. 🍃 *Monstera Deliciosa*: ₹499. Large split fenestration leaves, architectural decor.
+       5. 🌴 *Areca Palm*: ₹310 | ₹449. 100% ASPCA certified pet-safe for cats and dogs.
+       6. 🪴 *Jade Plant*: ₹249. Vastu & Feng Shui fortune tree.
+       
+       ✨ *To help me recommend the ideal botanical companion for you:*
+       1. 💼 What is your occupation or daily lifestyle routine?
+       2. 🏠 Why are you buying this item, and which room will it live in?
+       3. 📍 Can you tell us your locality / town?"
+
+Turn 4: [Contextual Analysis & Socratic Botanical Selling]
+User:  "I am a technical IT job seeker, so I needed to plant a plant inside my room, so can you suggest me?"
+Agent: "🌿 *Botanical Recommendation for Your IT Workspace & Bedroom* 💻🌱
+       As a technical IT job seeker spending long hours coding, studying, and attending virtual interviews:
+       • Your room has dry AC air, artificial LED lighting, and screen glare.
+       • You need a plant that releases fresh oxygen during nighttime study hours and needs zero maintenance!
+       
+       🎯 *Top Recommendations:*
+       1. 🥇 *Snake Plant (Sansevieria Laurentii)* — ₹220 (Grow Bag) | ₹450 (Ceramic). Performs CAM photosynthesis (releases fresh oxygen all night while you sleep for morning mental focus), filters electronic VOCs, water only once every 14-20 days!
+       2. 🥈 *ZZ Plant* — ₹280 | ₹520. Glossy foliage relieves ocular strain, survives zero sunlight.
+       
+       📍 Can you tell us your locality in Kerala so we can tailor the watering rhythm?
+       Shall I reserve a healthy Snake Plant in a designer ceramic pot for you with direct delivery?"
+
+Turn 5: [Locality Advice & Order Closing]
+User:  "I am from Kottayam, Kerala"
+Agent: "📍 *Wonderful! Tailored Climate Care for KOTTAYAM:*
+       In Kerala's tropical humidity:
+       • 🌧️ *Monsoon Season:* Water your Snake Plant only once every 18-20 days.
+       • ☀️ *Summer Season:* Water once every 12-14 days.
+       
+       💳 *Order & Delivery:* Safe doorstep delivery or store pickup in Vallakom, Vaikom. UPI: merlotdecor@icici.
+       Shall I confirm your order for the Snake Plant in Ceramic Planter (₹450) or Grow Bag (₹220)?"
 ```
 
 ---

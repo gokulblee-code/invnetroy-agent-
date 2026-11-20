@@ -1,0 +1,67 @@
+[
+  {
+    "product_id": "csv_1793369485223_11",
+    "product_name": "Aglaonema Red Gold Chinese Evergreen",
+    "vendor_id": "v_deccan_flora",
+    "vendor_name": "Deccan Flora Wholesale Nursery",
+    "vendor_phone": "7012920612",
+    "locked_price": 240,
+    "quantity": 60,
+    "po_number": "PO-MERLOT-307351",
+    "timestamp": "2026-11-07T06:18:32.227Z",
+    "id": "deal_1794032312229",
+    "saved_at": "2026-11-07T06:18:32.229Z"
+  },
+  {
+    "product_id": "csv_1793369485223_9",
+    "product_name": "Philodendron Birkin Striped Luxury",
+    "vendor_id": "v_deccan_flora",
+    "vendor_name": "Deccan Flora Wholesale Nursery",
+    "vendor_phone": "7012920612",
+    "locked_price": 340,
+    "quantity": 30,
+    "po_number": "PO-MERLOT-084291",
+    "timestamp": "2026-11-02T07:38:05.912Z",
+    "id": "deal_1793605085916",
+    "saved_at": "2026-11-02T07:38:05.916Z"
+  },
+  {
+    "product_id": "csv_1793369485223_7",
+    "product_name": "Peace Lily (Spathiphyllum Bloom)",
+    "vendor_id": "v_deccan_flora",
+    "vendor_name": "Deccan Flora Wholesale Nursery",
+    "vendor_phone": "7012920612",
+    "locked_price": 305,
+    "quantity": 30,
+    "po_number": "PO-MERLOT-708832",
+    "timestamp": "2026-10-31T11:38:37.690Z",
+    "id": "deal_1793446717693",
+    "saved_at": "2026-10-31T11:38:37.693Z"
+  },
+  {
+    "product_id": "m1",
+    "product_name": "Snake Plant in Ceramic Pot",
+    "vendor_id": "manager_inward",
+    "vendor_name": "Deccan Flora Wholesale Nursery",
+    "vendor_phone": "",
+    "locked_price": 245,
+    "quantity": 10,
+    "po_number": "RESTOCK-MGR-437102",
+    "timestamp": "2026-10-31T06:33:57.103Z",
+    "id": "deal_1793428437105",
+    "saved_at": "2026-10-31T06:33:57.105Z"
+  },
+  {
+    "product_id": "m1",
+    "product_name": "Snake Plant in Ceramic Pot",
+    "vendor_id": "manager_inward",
+    "vendor_name": "Deccan Flora Wholesale Nursery",
+    "vendor_phone": "",
+    "locked_price": 245,
+    "quantity": 10,
+    "po_number": "RESTOCK-MGR-426456",
+    "timestamp": "2026-10-31T06:33:46.457Z",
+    "id": "deal_1793428426457",
+    "saved_at": "2026-10-31T06:33:46.457Z"
+  }
+]
